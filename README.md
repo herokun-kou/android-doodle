@@ -17,8 +17,8 @@ header와 footer는 메뉴 아이템들의 가장 위와 가장 아래에 표시
 그룹 배열과 그룹 아이템 배열을 지정해주면 되며, 그룹 아이템은 2차원 배열로 length(size)가 그룹 배열과 그룹 아이템 배열이 같아야합니다.   
 나머지 내용은 아래의 코드를 살펴보면서 이해해주세요. 
    
-###Usage
-####XML
+### Usage
+#### XML
 아래의 AnimatedMenu를 하나의 별도 layout파일로 정의하고 <include/> 태그를 통해 다른 레이아웃에서 불러오면 편리합니다.
 ```xml
 <com.herok.doodle.AnimatedMenu
@@ -77,7 +77,7 @@ header와 footer는 메뉴 아이템들의 가장 위와 가장 아래에 표시
 </com.herok.doodle.AnimatedMenu>
 ```
 주석을 읽어보시면 대강 사용법이 감이 오실거라 생각합니다.
-####Kotlin
+#### Kotlin
 뷰의 초기화는 아래와 같이 합니다. 먼저 AnimatedMenu를 가져온 후(ViewBinding으로도 가능합니다) 그룹, 아이템 배열을 만들어서 AnimatedMenu에 setGroupsAndItems를 호출해 설정합니다.   
 각 아이템의 클릭 액션은 아래의 setItemClickListener(groupPosition, itemPosition, listener)을 호출해 설정합니다.   
 ```kotlin
@@ -129,7 +129,7 @@ animatedMenu.itemTextSize = context.resources.getDimensionPixelSize(R.dimen.item
 animatedMenu.groupTextSize = context.resources.getDimensionPixelSize(R.dimen.group_text_size)
 ```
 
-####Exceptions
+#### Exceptions
 AnimatedMenu는 다음 상황에서 Exception을 발생시킵니다:
 - Xml 속성 useDecoration 속성이 true이지만 AnimatedMenu의 자식 뷰의 수가 0개일 때
 - Xml 속성 useDecoration 속성이 false인데 AnimatedMenu의 자식 뷰의 수가 2개 이상일 때
@@ -137,7 +137,7 @@ AnimatedMenu는 다음 상황에서 Exception을 발생시킵니다:
 - Xml 속성 useFooter가 true인데 footer view를 찾을 수 없을 때
 물론 이외에도 당연히 Exception은 발생할 수 있으나 대표적인 몇 가지를 나열했습니다.
 
-##Conclusion
+## Conclusion
 패키지에 라이브러리 aar파일이 있을겁니다. 흥미가 가신다면 가져가셔서 써보세요.   
 코드도 저장소에 있으니 관심있으시면 보시고 마구 까주시면 좋겠습니다. 스파게티거든요.   
 어쨌든 그렇습니다! 어디까지나 낙서 프로젝트라 당연히 버그가 많을거에요.
