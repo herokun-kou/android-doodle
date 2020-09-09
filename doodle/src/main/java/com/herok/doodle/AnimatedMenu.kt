@@ -21,7 +21,6 @@ import androidx.core.graphics.blue
 import androidx.core.graphics.green
 import androidx.core.graphics.red
 import androidx.core.view.*
-import com.herok.doodle.app.R
 
 class AnimatedMenu(context: Context, attrs: AttributeSet?): FrameLayout(context, attrs) {
 
@@ -262,7 +261,7 @@ class AnimatedMenu(context: Context, attrs: AttributeSet?): FrameLayout(context,
         items.removeAt(position)
     }
 
-    fun addItem(group: Int, position: Int, text: String, onClickListener: OnClickListener?, animate: Boolean = false){
+    fun addItem(group: Int, position: Int, text: String, animate: Boolean = false, onClickListener: ((View) -> (Unit))?){
         if(animating) return
 
         if(animate)
@@ -318,7 +317,7 @@ class AnimatedMenu(context: Context, attrs: AttributeSet?): FrameLayout(context,
         items[group].removeAt(position)
     }
 
-    fun addItemClickListener(group: Int, position: Int, listener: ((View) -> (Unit))?){
+    fun setItemClickListener(group: Int, position: Int, listener: ((View) -> (Unit))?){
         menuView!!.getChildAt(findItemPosition(group, position)).setOnClickListener(listener)
     }
 
