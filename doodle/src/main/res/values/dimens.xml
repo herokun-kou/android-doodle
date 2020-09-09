@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="default_item_text_size">25sp</dimen>
+    <dimen name="default_group_text_size">18sp</dimen>
+
+    <dimen name="diff_group_margin">27dp</dimen>
+
+    <dimen name="animate_items_translation_y">20dp</dimen>
+</resources>

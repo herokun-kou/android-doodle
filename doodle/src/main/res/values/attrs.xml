@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="AnimatedMenu">
+        <attr name="useDecoration" format="boolean"/>
+        <attr name="useHeader" format="boolean"/>
+        <attr name="useFooter" format="boolean"/>
+        <attr name="groupTextSize" format="dimension"/>
+        <attr name="itemTextSize" format="dimension"/>
+        <attr name="groupTextColor" format="color"/>
+        <attr name="itemTextColor" format="color"/>
+        <attr name="bgColor" format="color"/>
+    </declare-styleable>
+</resources>

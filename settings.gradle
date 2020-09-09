@@ -1,0 +1,3 @@
+include ':doodle'
+include ':app'
+rootProject.name = "Doodle"

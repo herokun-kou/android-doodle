@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="default_group_text_color">#A0FFFFFF</color>
+    <color name="default_item_text_color">#FFFFFF</color>
+</resources>
