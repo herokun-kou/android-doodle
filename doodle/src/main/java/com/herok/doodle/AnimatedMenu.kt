@@ -22,15 +22,50 @@ import androidx.core.graphics.green
 import androidx.core.graphics.red
 import androidx.core.view.*
 
+/**
+ * An AnimatedMenu class extends FrameLayout.
+ *
+ * Creates animated pop-up menu view, which has menu groups and items.
+ * Define this view at xml to use. See github README.md for more information.
+ *
+ * @author herok
+ *
+ * @constructor Creates AnimatedMenu object.
+ * @property[groups] Holds groups data. Set by [setGroupsAndItems] and setter function receive array type but this object is mutable list.
+ * @property[items] Holds items data. 2-dimensional. Same as groups, this object is mutable list.
+ * @property[groupTextSize] Group text styling-textSize. Modifying this value applies changes immediately.
+ * @property[itemTextSize] Item text styling-textSize. Modifying this value applies changes immediately.
+ * @property[groupTextColor] Group text styling-textColor. Modifying this value applies changes immediately.
+ * @property[itemTextColor] Item text styling-textColor. Modifying this value applies changes immediately.
+ * @property[bgColor] AnimatedMenu styling-backgroundColor. alpha value is driven by this class, you can set only r, g, b values.
+ * @property[useDecoration] true if this animated menu uses decoration view. read-only.
+ * @property[useHeader] true if this animated menu uses header view. read-only.
+ * @property[useFooter] true if this animated menu uses footer view. read-only.
+ * @property[animating] true if this animated menu is animating something. This can be show/hide animation, or group(item) add/remove animation.
+ * @property[decorationView] holds decoration view object. can be null.
+ * @property[menuLayout] holds menu view(contains header, footer, groups, items) object. can be null.
+ */
 class AnimatedMenu(context: Context, attrs: AttributeSet?): FrameLayout(context, attrs) {
 
+    /**
+     * @property[TAG] Class tag.
+     * @property[TYPE_GROUP] Const used in creating new TextView, distinguish what type of target.
+     * @property[TYPE_ITEM] Const used in creating new TextView, distinguish what type of target.
+     * @property[ANIMATE_DURATION] Const used to set show/hide animation duration.
+     * @property[TEXT_ANIMATE_DELAY] Const used to set text-in animation delay.
+     * @property[TEXT_ANIMATE_MAX_DURATION] Const used to set max duration of each text in/out animation on show/hide
+     * @property[TEXT_ANIMATE_MIN_DURATION] Const used to set min duration of each text in/out animation on show/hide
+     * @property[ADD_REMOVE_ANIMATION_DURATION] Const used to set group/item add/remove animation duration.
+     */
     companion object {
         private const val TAG = "AnimatedMenu"
 
         private const val TYPE_GROUP = 0
         private const val TYPE_ITEM = 1
         private const val ANIMATE_DURATION = 400L
-        private const val TEXT_ANIMATE_DELAY = 40L
+        private const val TEXT_ANIMATE_DELAY = 30L
+        private const val TEXT_ANIMATE_MAX_DURATION = 140L
+        private const val TEXT_ANIMATE_MIN_DURATION = 70L
         private const val ADD_REMOVE_ANIMATION_DURATION = 200L
     }
 
@@ -61,7 +96,14 @@ class AnimatedMenu(context: Context, attrs: AttributeSet?): FrameLayout(context,
             resetItemTextColor()
         }
 
-    private var useDecoration = false
+    var bgColor: Int = Color.BLACK
+        set(value) {
+            field = value
+            setBackgroundColor(Color.argb(0, field.red, field.green, field.blue))
+        }
+
+    private var _useDecoration = false
+    val useDecoration get() = _useDecoration
 
     private var _useHeader = false
     val useHeader get() = _useHeader
@@ -73,13 +115,7 @@ class AnimatedMenu(context: Context, attrs: AttributeSet?): FrameLayout(context,
     val animating get() = _animating
 
     private var decorationView: View? = null
-    private var menuView: LinearLayout? = null
-
-    private var bgColor: Int = Color.BLACK
-        set(value) {
-            field = value
-            setBackgroundColor(Color.argb(0, field.red, field.green, field.blue))
-        }
+    private var menuLayout: LinearLayout? = null
 
     constructor(context: Context): this(context, null)
 
@@ -110,7 +146,7 @@ class AnimatedMenu(context: Context, attrs: AttributeSet?): FrameLayout(context,
                     R.styleable.AnimatedMenu_bgColor,
                     Color.BLACK
                 )
-                useDecoration = getBoolean(R.styleable.AnimatedMenu_useDecoration, false)
+                _useDecoration = getBoolean(R.styleable.AnimatedMenu_useDecoration, false)
                 _useHeader = getBoolean(R.styleable.AnimatedMenu_useHeader, false)
                 _useFooter = getBoolean(R.styleable.AnimatedMenu_useFooter, false)
             } finally {
@@ -119,17 +155,21 @@ class AnimatedMenu(context: Context, attrs: AttributeSet?): FrameLayout(context,
         }
     }
 
+
+    /**
+     * First initialization. Throws some exceptions when Child View count is mismatching with given xml attributes.
+     */
     override fun onFinishInflate() {
         super.onFinishInflate()
-        if(useDecoration && childCount < 1) throw DecorationViewNotFoundException("decoration view(or layout) not found in xml!")
-        if(!useDecoration && childCount > 1) throw TooManyChildViewsException("Too many child Views! Are you using decoration view, define useDecoration attribute to true.")
+        if(useDecoration && childCount < 1) throw Exception("decoration view(or layout) not found in xml!")
+        if(!useDecoration && childCount > 1) throw Exception("Too many child Views! Are you using decoration view, define useDecoration attribute to true.")
 
         if(useHeader && useFooter && ((getChildAt(1) as LinearLayout).childCount != 2)){
             throw Exception("Error getting header view and footer view. required two views, header and footer.")
         }else if(((useHeader && !useFooter) || (!useHeader && useFooter)) && ((getChildAt(1) as LinearLayout).childCount != 1)){
             throw Exception("Error getting header view and footer view. required one view, header or footer")
         }else if(!useHeader && !useFooter && ((getChildAt(1) as LinearLayout).childCount != 0)){
-            throw TooManyChildViewsException("Too many child views! Are you using header or footer, define useHeader or useFooter in xml.")
+            throw Exception("Too many child views! Are you using header or footer, define useHeader or useFooter in xml.")
         }
 
         initViews()
@@ -138,6 +178,11 @@ class AnimatedMenu(context: Context, attrs: AttributeSet?): FrameLayout(context,
         setOnClickListener{ hide() }
     }
 
+
+    /**
+     * Sets [groups] and [items] with given array. Receive type is array, but [groups] and [items] are MutableList.
+     * Must call this function to use this view.
+     */
     fun setGroupsAndItems(groups: Array<String>, items: Array<Array<String>>){
         this.groups.clear()
         this.items.clear()
@@ -151,21 +196,25 @@ class AnimatedMenu(context: Context, attrs: AttributeSet?): FrameLayout(context,
         initViews()
     }
 
+
+    /**
+     * Internal call only. Initialize menuView, decorationView, etc and adds TextView to menuView matches with [groups] and [items].
+     */
     private fun initViews(){
         if(animating) return
 
-        if(groups.size != items.size) throw ItemGroupSizeMismatchException("group size: ${groups.size}, item size: ${items.size}")
+        if(groups.size != items.size) throw Exception("Item and group size mismatch : group size: ${groups.size}, item size: ${items.size}")
 
         if(useDecoration && decorationView == null){
             decorationView = getChildAt(0)
         }
 
-        if(menuView == null){
-            menuView = getMenuLayout()
-            menuView?.orientation = LinearLayout.VERTICAL
-            menuView?.gravity = Gravity.CENTER
+        if(menuLayout == null){
+            menuLayout = getMenuLayout()
+            menuLayout?.orientation = LinearLayout.VERTICAL
+            menuLayout?.gravity = Gravity.CENTER
         } else {
-            menuView?.removeViews(if(useHeader) 1 else 0, menuView!!.childCount - (if(useHeader) 1 else 0) - (if(useFooter) 1 else 0))
+            menuLayout?.removeViews(if(useHeader) 1 else 0, menuLayout!!.childCount - (if(useHeader) 1 else 0) - (if(useFooter) 1 else 0))
         }
 
         groups.forEachIndexed { groupIndex, eachGroup ->
@@ -178,7 +227,7 @@ class AnimatedMenu(context: Context, attrs: AttributeSet?): FrameLayout(context,
 
             groupText.layoutParams = groupLayoutParams
 
-            menuView?.addView(groupText, menuView!!.childCount - (if(useFooter) 1 else 0))
+            menuLayout?.addView(groupText, menuLayout!!.childCount - (if(useFooter) 1 else 0))
 
             items[groupIndex].forEach { eachItem ->
                 val itemText = createNewTextView(TYPE_ITEM, eachItem)
@@ -186,14 +235,21 @@ class AnimatedMenu(context: Context, attrs: AttributeSet?): FrameLayout(context,
 
                 itemText.layoutParams = itemLayoutParams
 
-                menuView?.addView(itemText, menuView!!.childCount - (if(useFooter) 1 else 0))
+                menuLayout?.addView(itemText, menuLayout!!.childCount - (if(useFooter) 1 else 0))
             }
         }
 
-        menuView?.setPadding(0, context.resources.getDimensionPixelSize(R.dimen.animate_items_translation_y),
+        menuLayout?.setPadding(0, context.resources.getDimensionPixelSize(R.dimen.animate_items_translation_y),
             0, context.resources.getDimensionPixelSize(R.dimen.animate_items_translation_y))
     }
 
+
+    /**
+     * Adds group dynamically. Pass [animate] to false or skip setting last argument to add group without animation.
+     * @param[position] Position where new group inserted to.
+     * @param[text] Title of group which textView displays.
+     * @param[animate] true if you want to add group with animation. default is false.
+     */
     fun addGroup(position: Int, text: String, animate: Boolean = false){
         if(animating) return
 
@@ -210,20 +266,26 @@ class AnimatedMenu(context: Context, attrs: AttributeSet?): FrameLayout(context,
             R.dimen.diff_group_margin
         )
         newText.alpha = if(animate) 0f else 1f
-        menuView?.addView(newText, viewPosition)
+        menuLayout?.addView(newText, viewPosition)
 
         if(animate) {
             newText.viewTreeObserver.addOnGlobalLayoutListener(object :
                 ViewTreeObserver.OnGlobalLayoutListener {
                 override fun onGlobalLayout() {
                     newText.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                    animateViewIn(newText, viewPosition)
+                    animateViewIn(newText)
                 }
             })
         }
 
     }
 
+
+    /**
+     * Removes group dynamically. Pass [animate] to false or skip setting last argument to remove group without animation.
+     * @param[position] Position where target group remove to.
+     * @param[animate] true if you want to remove group with animation. default is false.
+     */
     fun removeGroup(position: Int, animate: Boolean = false){
         if(animating) return
 
@@ -239,121 +301,168 @@ class AnimatedMenu(context: Context, attrs: AttributeSet?): FrameLayout(context,
         if(animate)
             waitToAnimateFinish(ADD_REMOVE_ANIMATION_DURATION)
 
-        val viewPosition = findGroupPosition(position)
-        val targetText = menuView!!.getChildAt(viewPosition)
+        val targetText = menuLayout!!.getChildAt(findGroupPosition(position))
 
         val removeTexts: MutableList<View> = ArrayList()
         removeTexts.add(targetText)
         items[position].forEachIndexed { index, _ ->
-            removeTexts.add(menuView!!.getChildAt(findItemPosition(position, index)))
+            removeTexts.add(menuLayout!!.getChildAt(findItemPosition(position, index)))
         }
 
         if(animate) {
-            animateViewOut(removeTexts, viewPosition) {
-                menuView?.forEach { it.translationY = 0f }
-                removeTexts.forEach { menuView?.removeView(it) }
+            animateViewOut(removeTexts) {
+                menuLayout?.forEach { it.translationY = 0f }
+                removeTexts.forEach { menuLayout?.removeView(it) }
             }
         }else{
-            removeTexts.forEach { menuView?.removeView(it) }
+            removeTexts.forEach { menuLayout?.removeView(it) }
         }
 
         groups.removeAt(position)
         items.removeAt(position)
     }
 
-    fun addItem(group: Int, position: Int, text: String, animate: Boolean = false, onClickListener: ((View) -> (Unit))?){
+
+    /**
+     * Adds item dynamically. Pass [animate] to false or skip setting last argument to add item without animation.
+     * @param[groupPosition] Position of group where new item added to.
+     * @param[positionInGroup] Position in group where new item inserted to.
+     * @param[text] Title of item which textView displays.
+     * @param[animate] true if you want to add item with animation. default is false.
+     * @param[onClickListener] Default onClickListener set to item text. You can pass this value null to set listener later.
+     */
+    fun addItem(groupPosition: Int, positionInGroup: Int, text: String, animate: Boolean = false, onClickListener: ((View) -> (Unit))?){
         if(animating) return
 
         if(animate)
             waitToAnimateFinish(ADD_REMOVE_ANIMATION_DURATION)
 
-        items[group].add(position, text)
+        items[groupPosition].add(positionInGroup, text)
 
         val newText = createNewTextView(TYPE_ITEM, text)
         newText.setOnClickListener(onClickListener)
         newText.alpha = if(animate) 0f else 1f
 
-        val viewPosition = findItemPosition(group, position)
-        menuView?.addView(newText, viewPosition)
+        val viewPosition = findItemPosition(groupPosition, positionInGroup)
+        menuLayout?.addView(newText, viewPosition)
 
         if(animate) {
             newText.viewTreeObserver.addOnGlobalLayoutListener(object :
                 ViewTreeObserver.OnGlobalLayoutListener {
                 override fun onGlobalLayout() {
                     newText.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                    animateViewIn(newText, viewPosition)
+                    animateViewIn(newText)
                 }
             })
         }
     }
 
-    fun removeItem(group: Int, position: Int, animate: Boolean = false){
+    /**
+     * Removes item dynamically. Pass [animate] to false or skip setting last argument to remove item without animation.
+     * @param[groupPosition] Position of group where target item removed to.
+     * @param[positionInGroup] Position in group where target item remove to.
+     * @param[animate] true if you want to remove item with animation. default is false.
+     */
+    fun removeItem(groupPosition: Int, positionInGroup: Int, animate: Boolean = false){
         if(animating) return
 
-        if(group >= groups.size) {
-            Log.e(TAG, "Error! group index is bigger than group count - target: $group, size: ${groups.size}")
+        if(groupPosition >= groups.size) {
+            Log.e(TAG, "Error! group index is bigger than group count - target: $groupPosition, size: ${groups.size}")
             return
         }
-        if(position >= items[group].size) {
-            Log.e(TAG, "Error! group index is bigger than group count - target: $position, size: ${items[group].size}")
+        if(positionInGroup >= items[groupPosition].size) {
+            Log.e(TAG, "Error! group index is bigger than group count - target: $positionInGroup, size: ${items[groupPosition].size}")
             return
         }
 
         if(animate)
             waitToAnimateFinish(ADD_REMOVE_ANIMATION_DURATION)
 
-        val viewPosition = findItemPosition(group, position)
-        val targetText = menuView!!.getChildAt(viewPosition)
+        val viewPosition = findItemPosition(groupPosition, positionInGroup)
+        val targetText = menuLayout!!.getChildAt(viewPosition)
 
         if(animate) {
-            animateViewOut(MutableList(1) { targetText }, viewPosition) {
-                menuView?.forEach { it.translationY = 0f }
-                menuView?.removeView(targetText)
+            animateViewOut(MutableList(1) { targetText }) {
+                menuLayout?.forEach { it.translationY = 0f }
+                menuLayout?.removeView(targetText)
             }
         }else{
-            menuView?.removeView(targetText)
+            menuLayout?.removeView(targetText)
         }
 
-        items[group].removeAt(position)
+        items[groupPosition].removeAt(positionInGroup)
     }
 
-    fun setItemClickListener(group: Int, position: Int, listener: ((View) -> (Unit))?){
-        menuView!!.getChildAt(findItemPosition(group, position)).setOnClickListener(listener)
+
+    /**
+     * Sets OnClickListener with lambda expression to item TextView.
+     * @param[groupPosition] Group of target item.
+     * @param[positionInGroup] Position in group of target item.
+     * @param[listener] Target OnClickListener.
+     */
+    fun setItemClickListener(groupPosition: Int, positionInGroup: Int, listener: ((View) -> (Unit))?){
+        menuLayout!!.getChildAt(findItemPosition(groupPosition, positionInGroup)).setOnClickListener(listener)
     }
 
-    private fun animateViewIn(targetText: TextView, startPosition: Int){
-        targetText.animate().setDuration(100L).setStartDelay(100L).alpha(1f).start()
+
+    /**
+     * Sets OnClickListener object to item TextView.
+     * @param[groupPosition] Group of target item.
+     * @param[positionInGroup] Position in group of target item.
+     * @param[listener] Target OnClickListener.
+     */
+    fun setItemClickListener(groupPosition: Int, positionInGroup: Int, listener: OnClickListener?){
+        menuLayout!!.getChildAt(findItemPosition(groupPosition, positionInGroup)).setOnClickListener(listener)
+    }
+
+
+    /**
+     * Animates in animation when new view inserted to [menuLayout].
+     * @param[target] Added View.
+     */
+    private fun animateViewIn(target: View){
+        val startPosition = menuLayout!!.indexOfChild(target)
+        target.animate().setDuration(100L).setStartDelay(100L).alpha(1f).start()
         for(itemIndex in 0 until startPosition){
-            menuView!!.getChildAt(itemIndex).translationY = (targetText.height.toFloat() + targetText.marginTop)/2
-            createInAnimator(itemIndex).start()
+            menuLayout!!.getChildAt(itemIndex).translationY = (target.height.toFloat() + target.marginTop)/2
+            createInAnimator(menuLayout!!.getChildAt(itemIndex)).start()
         }
-        for(itemIndex in (startPosition + 1) until (menuView?.childCount ?: startPosition + 1)){
-            menuView!!.getChildAt(itemIndex).translationY = -(targetText.height.toFloat() + targetText.marginTop)/2
-            createInAnimator(itemIndex).start()
+        for(itemIndex in (startPosition + 1) until (menuLayout?.childCount ?: startPosition + 1)){
+            menuLayout!!.getChildAt(itemIndex).translationY = -(target.height.toFloat() + target.marginTop)/2
+            createInAnimator(menuLayout!!.getChildAt(itemIndex)).start()
         }
     }
 
-    private fun createInAnimator(itemIndex: Int): ViewPropertyAnimator{
-        return menuView!!.getChildAt(itemIndex)
-            .animate()
+    /**
+     * Creates in animator.
+     * @param[view] Target view to create animator.
+     */
+    private fun createInAnimator(view: View): ViewPropertyAnimator{
+        return view.animate()
             .setStartDelay(0L)
             .setDuration(ADD_REMOVE_ANIMATION_DURATION)
             .translationY(0f)
             .withEndAction(null)
     }
 
-    private fun animateViewOut(targetTexts: List<View>, startPosition: Int, endAction: (() -> (Unit))?){
+    /**
+     * Animates out animation when new view removed to [menuLayout].
+     * @param[targets] Views which will remove when animate finishes.
+     * @param[endAction] Animate end action.
+     */
+    private fun animateViewOut(targets: List<View>, endAction: (() -> (Unit))?){
         var removedHeight = 0
-        targetTexts.forEach { targetText ->
+        val startPosition = menuLayout!!.indexOfChild(targets[0])
+        targets.forEach { targetText ->
             removedHeight += targetText.height + targetText.marginTop
             targetText.animate().alpha(0f).setStartDelay(0L).setDuration(100L).withEndAction(null).start()
         }
         val animateTargets: MutableList<View> = ArrayList()
         for(itemIndex in 0 until startPosition){
-            animateTargets.add(menuView!!.getChildAt(itemIndex) as TextView)
+            animateTargets.add(menuLayout!!.getChildAt(itemIndex) as TextView)
         }
-        for(itemIndex in (startPosition + targetTexts.size) until (menuView?.childCount ?: startPosition + targetTexts.size)){
-            animateTargets.add(menuView!!.getChildAt(itemIndex) as TextView)
+        for(itemIndex in (startPosition + targets.size) until (menuLayout?.childCount ?: startPosition + targets.size)){
+            animateTargets.add(menuLayout!!.getChildAt(itemIndex) as TextView)
         }
         animateTargets.forEachIndexed { index, textView ->
             val animator: ViewPropertyAnimator = if(index < startPosition) {
@@ -375,6 +484,11 @@ class AnimatedMenu(context: Context, attrs: AttributeSet?): FrameLayout(context,
         }
     }
 
+
+    /**
+     * Creates out animator.
+     * @param[view] Target view to create animator.
+     */
     private fun createOutAnimator(view: View, into: Float): ViewPropertyAnimator{
         return view.animate()
             .setStartDelay(0L)
@@ -384,6 +498,11 @@ class AnimatedMenu(context: Context, attrs: AttributeSet?): FrameLayout(context,
             .withEndAction(null)
     }
 
+
+    /**
+     * Finds group view index of menuView with given group position.
+     * @param[group] Group position of target view.
+     */
     private fun findGroupPosition(group: Int): Int{
         var groupPosition = 0
         for(groupIndex in 0 until group){
@@ -392,14 +511,26 @@ class AnimatedMenu(context: Context, attrs: AttributeSet?): FrameLayout(context,
         return groupPosition + if(useHeader) 1 else 0
     }
 
-    private fun findItemPosition(group: Int, position: Int): Int{
-        var itemPosition = 1 + position
-        for(groupIndex in 0 until group){
+
+    /**
+     * Finds item view index of menuView with given group position and item position in group.
+     * @param[groupPosition] Group position of target view.
+     * @param[positionInGroup] Position in group of target view.
+     */
+    private fun findItemPosition(groupPosition: Int, positionInGroup: Int): Int{
+        var itemPosition = 1 + positionInGroup
+        for(groupIndex in 0 until groupPosition){
             itemPosition += (1 + items[groupIndex].size)
         }
         return itemPosition + if(useHeader) 1 else 0
     }
 
+
+    /**
+     * Creates new TextView.
+     * @param[type] [TYPE_GROUP] if creates group text, [TYPE_ITEM] if creates item text.
+     * @param[text] Title text of newly created TextView.
+     */
     private fun createNewTextView(type: Int, text: String): TextView{
         val newText = TextView(context)
 
@@ -412,6 +543,10 @@ class AnimatedMenu(context: Context, attrs: AttributeSet?): FrameLayout(context,
         return newText
     }
 
+
+    /**
+     * Gets menu layout. Used in initViews().
+     */
     private fun getMenuLayout(): LinearLayout{
         return if(useDecoration && childCount == 2){
             getChildAt(1) as LinearLayout
@@ -428,6 +563,10 @@ class AnimatedMenu(context: Context, attrs: AttributeSet?): FrameLayout(context,
         }
     }
 
+    /**
+     * Creates Handler and call postDelayed with given duration.
+     * @param[duration] Delay ms.
+     */
     private fun waitToAnimateFinish(duration: Long){
         _animating = true
         Handler(Looper.getMainLooper()).postDelayed({
@@ -435,76 +574,140 @@ class AnimatedMenu(context: Context, attrs: AttributeSet?): FrameLayout(context,
         }, duration)
     }
 
+
+    /**
+     * Resets group TextViews size.
+     */
     private fun resetGroupTextSize() {
         groups.forEachIndexed { index, _ ->
-            ((menuView!!.getChildAt(findGroupPosition(index))) as TextView).setTextSize(TypedValue.COMPLEX_UNIT_PX, groupTextSize.toFloat())
+            ((menuLayout!!.getChildAt(findGroupPosition(index))) as TextView).setTextSize(TypedValue.COMPLEX_UNIT_PX, groupTextSize.toFloat())
         }
     }
 
+
+    /**
+     * Resets item TextViews size.
+     */
     private fun resetItemTextSize() {
         groups.forEachIndexed{ groupIndex, _ ->
             items[groupIndex].forEachIndexed { itemIndex, _ ->
-                ((menuView!!.getChildAt(findItemPosition(groupIndex, itemIndex))) as TextView).setTextSize(TypedValue.COMPLEX_UNIT_PX, itemTextSize.toFloat())
+                ((menuLayout!!.getChildAt(findItemPosition(groupIndex, itemIndex))) as TextView).setTextSize(TypedValue.COMPLEX_UNIT_PX, itemTextSize.toFloat())
             }
         }
     }
 
+    /**
+     * Resets group TextViews color.
+     */
     private fun resetGroupTextColor(){
         groups.forEachIndexed { index, _ ->
-            ((menuView!!.getChildAt(findGroupPosition(index))) as TextView).setTextColor(groupTextColor)
+            ((menuLayout!!.getChildAt(findGroupPosition(index))) as TextView).setTextColor(groupTextColor)
         }
     }
 
+    /**
+     * Resets item TextViews color.
+     */
     private fun resetItemTextColor(){
         groups.forEachIndexed{ groupIndex, _ ->
             items[groupIndex].forEachIndexed { itemIndex, _ ->
-                ((menuView!!.getChildAt(findItemPosition(groupIndex, itemIndex))) as TextView).setTextColor(itemTextColor)
+                ((menuLayout!!.getChildAt(findItemPosition(groupIndex, itemIndex))) as TextView).setTextColor(itemTextColor)
             }
         }
     }
 
+
+    /**
+     * Adds decoration view without any animations.
+     * @param[decoration] Target decoration view.
+     */
+    fun addDecoration(decoration: View){
+        if(useDecoration){
+            Log.e(TAG, "decoration already exists! to replace it, call removeDecoration() first.")
+            return
+        }
+        _useDecoration = true
+        addView(decoration, 0)
+    }
+
+
+    /**
+     * Removes decoration view without any animations.
+     */
+    fun removeDecoration(){
+        if(!useDecoration){
+            Log.e(TAG, "decoration not exists!!")
+            return
+        }
+        _useDecoration = false
+        removeViewAt(0)
+    }
+
+
+    /**
+     * Adds header view without any animations.
+     * @param[headerView] Target header view.
+     */
     fun addHeader(headerView: View){
         if(useHeader){
             Log.e(TAG, "header already exists! to replace it, call removeHeader() first.")
             return
         }
-        menuView?.addView(headerView, 0)
+        menuLayout?.addView(headerView, 0)
         _useHeader = true
     }
 
+
+    /**
+     * Removes header view without any animations.
+     */
     fun removeHeader(){
         if(!useHeader){
             Log.e(TAG, "header not exists!")
             return
         }
-        menuView?.removeViewAt(0)
+        menuLayout?.removeViewAt(0)
         _useHeader = false
     }
 
+
+    /**
+     * Adds footer view without any animations.
+     * @param[footerView] Target footer view.
+     */
     fun addFooter(footerView: View){
         if(useFooter){
-            Log.e(TAG, "footer already exists! to replace it, call removeHeader() first.")
+            Log.e(TAG, "footer already exists! to replace it, call removeFooter() first.")
             return
         }
-        menuView?.addView(footerView)
+        menuLayout?.addView(footerView)
         _useFooter = true
     }
 
+
+    /**
+     * Removes footer view without any animations.
+     */
     fun removeFooter(){
         if(!useFooter){
             Log.e(TAG, "footer not exists!")
             return
         }
-        menuView?.removeViewAt(menuView!!.childCount - 1)
+        menuLayout?.removeViewAt(menuLayout!!.childCount - 1)
         _useFooter = false
     }
 
+
+    /**
+     * Shows AnimatedMenu with animation.
+     */
     fun show(){
         if(animating) return
 
-        val duration = (ANIMATE_DURATION - (TEXT_ANIMATE_DELAY * menuView!!.childCount).coerceAtMost(350L)).coerceAtMost(70)
+        val textAnimDuration = (ANIMATE_DURATION - (TEXT_ANIMATE_DELAY * menuLayout!!.childCount).coerceAtMost(ANIMATE_DURATION - TEXT_ANIMATE_MIN_DURATION))
+            .coerceAtMost(TEXT_ANIMATE_MAX_DURATION)
 
-        waitToAnimateFinish((duration * menuView!!.childCount).coerceAtLeast(ANIMATE_DURATION))
+        waitToAnimateFinish((textAnimDuration + (menuLayout!!.childCount * TEXT_ANIMATE_DELAY)).coerceAtLeast(ANIMATE_DURATION))
 
         visibility = VISIBLE
         val animator = ValueAnimator.ofInt(0, 200).setDuration(ANIMATE_DURATION)
@@ -514,29 +717,34 @@ class AnimatedMenu(context: Context, attrs: AttributeSet?): FrameLayout(context,
         animator.start()
         decorationView?.alpha = 0f
         decorationView?.animate()?.alpha(1f)?.setDuration(ANIMATE_DURATION)?.start()
-        menuView?.forEachIndexed { index, view ->
+        menuLayout?.forEachIndexed { index, view ->
             view.translationY = context.resources.getDimension(R.dimen.animate_items_translation_y)
             view.alpha = 0f
 
             view.animate().translationY(0f)
-                .setDuration(duration)
+                .setDuration(textAnimDuration)
                 .setStartDelay(TEXT_ANIMATE_DELAY * index)
                 .setInterpolator(DecelerateInterpolator())
                 .start()
 
             view.animate().alpha(1f)
-                .setDuration(duration)
+                .setDuration(textAnimDuration)
                 .setStartDelay(TEXT_ANIMATE_DELAY * index)
                 .start()
         }
     }
 
+
+    /**
+     * Hides AnimatedMenu with animation.
+     */
     fun hide(){
         if(animating) return
 
-        val duration = (ANIMATE_DURATION - (TEXT_ANIMATE_DELAY * menuView!!.childCount).coerceAtMost(350L)).coerceAtMost(70)
+        val textAnimDuration = (ANIMATE_DURATION - (TEXT_ANIMATE_DELAY * menuLayout!!.childCount).coerceAtMost(ANIMATE_DURATION - TEXT_ANIMATE_MIN_DURATION))
+            .coerceAtMost(TEXT_ANIMATE_MAX_DURATION)
 
-        waitToAnimateFinish((duration * menuView!!.childCount).coerceAtLeast(ANIMATE_DURATION))
+        waitToAnimateFinish((textAnimDuration + (menuLayout!!.childCount * TEXT_ANIMATE_DELAY)).coerceAtLeast(ANIMATE_DURATION))
 
         val animator = ValueAnimator.ofInt(200, 0).setDuration(ANIMATE_DURATION)
         animator.addUpdateListener { value ->
@@ -547,49 +755,51 @@ class AnimatedMenu(context: Context, attrs: AttributeSet?): FrameLayout(context,
         decorationView?.alpha = 1f
         decorationView?.animate()?.alpha(0f)?.setDuration(ANIMATE_DURATION)?.start()
 
-        menuView?.forEachIndexed { index, view ->
+        menuLayout?.forEachIndexed { index, view ->
             view.translationY = 0f
             view.alpha = 1f
 
             view.animate().translationY(-context.resources.getDimension(R.dimen.animate_items_translation_y))
-                .setDuration(duration)
+                .setDuration(textAnimDuration)
                 .setStartDelay(TEXT_ANIMATE_DELAY * index)
                 .setInterpolator(DecelerateInterpolator())
                 .start()
 
             view.animate().alpha(0f)
-                .setDuration(duration)
+                .setDuration(textAnimDuration)
                 .setStartDelay(TEXT_ANIMATE_DELAY * index)
                 .start()
         }
     }
 
+
+    /**
+     * Shows AnimatedMenu without animation.
+     */
     fun showWithoutAnimation(){
         if(animating) return
 
         visibility = VISIBLE
         setBackgroundColor(Color.argb(200, bgColor.red, bgColor.green, bgColor.blue))
         decorationView?.alpha = 1f
-        menuView?.forEach { childEach ->
+        menuLayout?.forEach { childEach ->
             childEach.alpha = 1f
         }
     }
 
+
+    /**
+     * Hides AnimatedMenu without animation.
+     */
     fun hideWithoutAnimation(){
         if(animating) return
 
         visibility = GONE
         setBackgroundColor(Color.argb(0, bgColor.red, bgColor.green, bgColor.blue))
         decorationView?.alpha = 0f
-        menuView?.forEach { childEach ->
+        menuLayout?.forEach { childEach ->
             childEach.alpha = 0f
         }
     }
-
-    class ItemGroupSizeMismatchException(message: String): Exception(message)
-
-    class DecorationViewNotFoundException(message: String): Exception(message)
-
-    class TooManyChildViewsException(message: String): Exception(message)
 
 }
