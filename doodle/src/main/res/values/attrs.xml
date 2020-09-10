@@ -11,12 +11,15 @@
         <attr name="bgColor" format="color"/>
     </declare-styleable>
     <declare-styleable name="ShootingStar">
-        <attr name="shootingType" format="enum">
-            <enum name="dynamic" value="0"/>
-            <enum name="static" value="1"/>
-        </attr>
-        <attr name="maxStarCount" format="integer"/>
+        <attr name="minStarDelay" format="integer"/>
+        <attr name="maxStarDelay" format="integer"/>
+        <attr name="starCount" format="integer"/>
         <attr name="starColor" format="color"/>
-        <attr name="starSizes" format="reference"/>
+        <attr name="starRotation" format="float"/>
+        <attr name="shootingSpeed" format="integer"/>
+        <attr name="shootingType" format="enum">
+            <enum name="DYNAMIC" value="0"/>
+            <enum name="STATIC" value="1"/>
+        </attr>
     </declare-styleable>
 </resources>

@@ -6,4 +6,6 @@
     <dimen name="diff_group_margin">27dp</dimen>
 
     <dimen name="animate_items_translation_y">20dp</dimen>
+
+    <dimen name="star_height">0.5dp</dimen>
 </resources>
