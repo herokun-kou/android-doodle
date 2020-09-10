@@ -27,7 +27,7 @@ import kotlin.random.Random
  * @property[minStarDelay] Minimum delay of each star restarts shooting after finishes previous shooting.
  * @property[maxStarDelay] Maximum delay of each star restarts shooting after finishes previous shooting.
  * @property[shootingType] Star Shooting Type. Must be one of [SHOOTING_TYPE_DYNAMIC] and [SHOOTING_TYPE_STATIC]
- * @property[speed] Star shooting speed. Must in [0, 10]
+ * @property[shootingSpeed] Star shooting speed. Must in [0, 10]
  * @property[starRotation] Star rotation angle. Must in (-90, 90)
  * @property[starColor] Color of Star.
  * @property[starCount] Counts of stars to add this view. read-only.
@@ -48,7 +48,7 @@ class ShootingStar(context: Context, attrs: AttributeSet?): FrameLayout(context,
 
     var shootingType = 0
 
-    var speed = 5
+    var shootingSpeed = 5
         set(value){
             if(value < 0 || value > 10) return
             field = value
@@ -109,7 +109,7 @@ class ShootingStar(context: Context, attrs: AttributeSet?): FrameLayout(context,
 
                 starColor = getColor(R.styleable.ShootingStar_starColor, Color.WHITE)
 
-                speed = getInt(R.styleable.ShootingStar_shootingSpeed, 5)
+                shootingSpeed = getInt(R.styleable.ShootingStar_shootingSpeed, 5)
 
                 shootingType = getInt(R.styleable.ShootingStar_shootingType, 0)
             } finally {
@@ -176,7 +176,7 @@ class ShootingStar(context: Context, attrs: AttributeSet?): FrameLayout(context,
                     star.translationY = 20 + Random.nextFloat() * (height - 40)
 
                     val lightView = star.getChildAt(0)
-                    val duration = ((600 + Random.nextFloat() * 500) * ((11f - speed)/10f)).roundToInt().toLong()
+                    val duration = ((600 + Random.nextFloat() * 500) * ((11f - shootingSpeed)/10f)).roundToInt().toLong()
 
                     //Start animating.
                     lightView.animate()
@@ -262,7 +262,7 @@ class ShootingStar(context: Context, attrs: AttributeSet?): FrameLayout(context,
         delayHandler.removeCallbacksAndMessages(null)
         Handler(Looper.getMainLooper()).postDelayed({
             _shooting = false
-        }, (1100 * ((11f - speed)/10f)).toLong())
+        }, (1100 * ((11f - shootingSpeed)/10f)).toLong())
     }
 
     /**
