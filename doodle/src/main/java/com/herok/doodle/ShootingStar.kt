@@ -14,6 +14,28 @@ import kotlin.math.roundToInt
 import kotlin.math.tan
 import kotlin.random.Random
 
+
+/**
+ * @author herok
+ *
+ * A ShootingStar class extends FrameLayout.
+ *
+ * Creates shooting stars in android activity or fragment, etc.
+ * Define this view at xml to use. See github README.md for more information.
+ *
+ * @constructor Creates ShootingStar object.
+ * @property[minStarDelay] Minimum delay of each star restarts shooting after finishes previous shooting.
+ * @property[maxStarDelay] Maximum delay of each star restarts shooting after finishes previous shooting.
+ * @property[shootingType] Star Shooting Type. Must be one of [SHOOTING_TYPE_DYNAMIC] and [SHOOTING_TYPE_STATIC]
+ * @property[speed] Star shooting speed. Must in [0, 10]
+ * @property[starRotation] Star rotation angle. Must in (-90, 90)
+ * @property[starColor] Color of Star.
+ * @property[starCount] Counts of stars to add this view. read-only.
+ * @property[starDirection] Direction of Star shoots. read-only.
+ * @property[shooting] true if one or more stars are shooting or waiting for shoot, false otherwise. read-only.
+ * @property[layoutParamsArray] Array of FrameLayout.LayoutParams.
+ * @property[delayHandler] Handler object manages star shooting delay.
+ */
 class ShootingStar(context: Context, attrs: AttributeSet?): FrameLayout(context, attrs) {
 
     companion object {
@@ -41,7 +63,7 @@ class ShootingStar(context: Context, attrs: AttributeSet?): FrameLayout(context,
             if(value > 0) _starDirection = -1
 
             forEach {
-                val starHolder = it as LinearLayout
+                val starHolder = it as Star
                 starHolder.rotation = field
             }
         }
@@ -50,13 +72,14 @@ class ShootingStar(context: Context, attrs: AttributeSet?): FrameLayout(context,
         set(value){
             field = value
             forEach {
-                val starHolder = it as LinearLayout
+                val starHolder = it as Star
                 val star = starHolder.getChildAt(0)
                 star.setBackgroundColor(field)
             }
         }
 
-    private var maxStarCount = 0
+    private var _starCount = 0
+    val starCount get() = _starCount
 
     private var _starDirection = 1
     val starDirection get() = _starDirection
@@ -77,7 +100,7 @@ class ShootingStar(context: Context, attrs: AttributeSet?): FrameLayout(context,
             0, 0
         ).apply {
             try {
-                maxStarCount = getInt(R.styleable.ShootingStar_maxStarCount, 0)
+                _starCount = getInt(R.styleable.ShootingStar_starCount, 0)
 
                 starRotation = getFloat(R.styleable.ShootingStar_starRotation, -30f)
 
@@ -98,60 +121,80 @@ class ShootingStar(context: Context, attrs: AttributeSet?): FrameLayout(context,
         }
     }
 
+    /**
+     * First initialization.
+     */
     override fun onFinishInflate() {
         super.onFinishInflate()
 
         setUp()
     }
 
+    /**
+     * Overrides removeView. If there are no children in this view, sets shooting flag to false.
+     */
     override fun removeView(view: View?) {
         super.removeView(view)
         if(childCount == 0){
+            delayHandler.removeCallbacksAndMessages(null)
             _shooting = false
         }
     }
 
+    /**
+     * Initialization function.
+     */
     private fun setUp(){
         stop()
 
         removeAllViews()
 
-        for(index in 0 until maxStarCount){
+        for(index in 0 until starCount){
             createStar()
         }
     }
 
-    private fun shoot(starHolder: LinearLayout){
+    /**
+     * Recursive function. Post action with random delay. When delay finishes, star starts shoot.
+     * @param[star] target star to shoot.
+     */
+    private fun shoot(star: Star){
         delayHandler.postDelayed({
             if(layoutParamsArray.isEmpty()) {
                 stop()
                 return@postDelayed
             }
 
-            starHolder.layoutParams = layoutParamsArray[Random.nextInt(layoutParamsArray.size)]
-            starHolder.viewTreeObserver.addOnGlobalLayoutListener(object: ViewTreeObserver.OnGlobalLayoutListener{
+            star.layoutParams = layoutParamsArray[Random.nextInt(layoutParamsArray.size)]
+            //Layout params settings are not applied immediately, so add global layout listener and remove that in listener action.
+            star.viewTreeObserver.addOnGlobalLayoutListener(object: ViewTreeObserver.OnGlobalLayoutListener{
                 override fun onGlobalLayout() {
-                    starHolder.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                    starHolder.translationX = 20 + Random.nextFloat() * (width - 40)
-                    starHolder.translationY = 20 + Random.nextFloat() * (height - 40)
-                    val star = starHolder.getChildAt(0)
+                    star.viewTreeObserver.removeOnGlobalLayoutListener(this)
+
+                    //Sets location of star randomly.
+                    star.translationX = 20 + Random.nextFloat() * (width - 40)
+                    star.translationY = 20 + Random.nextFloat() * (height - 40)
+
+                    val lightView = star.getChildAt(0)
                     val duration = ((600 + Random.nextFloat() * 500) * ((11f - speed)/10f)).roundToInt().toLong()
-                    star.animate()
-                        .translationX(-starDirection * star.width.toFloat())
+
+                    //Start animating.
+                    lightView.animate()
+                        .translationX(-starDirection * lightView.width.toFloat())
                         .setDuration(duration)
                         .withEndAction {
-                            if(!starHolder.isEnabled) {
-                                removeView(starHolder)
+                            if(star.markedToRemove) {
+                                removeView(star)
                             }else {
-                                shoot(starHolder)
+                                shoot(star)
                             }
                         }
                         .start()
                     if(shootingType == SHOOTING_TYPE_DYNAMIC){
                         val translationX = starDirection * (200 + Random.nextFloat() * 500)
-                        starHolder.animate()
-                            .translationX(starHolder.translationX - translationX)
-                            .translationY(starHolder.translationY - (tan(Math.toRadians(starRotation.toDouble())).toFloat() * translationX))
+                        star.animate()
+                            .translationX(star.translationX - translationX)
+                            .translationY(star.translationY - (tan(Math.toRadians(starRotation.toDouble())).toFloat() * translationX))
                             .setDuration(duration)
                             .start()
                     }
@@ -160,33 +203,42 @@ class ShootingStar(context: Context, attrs: AttributeSet?): FrameLayout(context,
         }, minStarDelay + ((maxStarDelay - minStarDelay) * Random.nextFloat()).toLong())
     }
 
+    /**
+     * Creates new star and add to view.
+     */
     private fun createStar(){
-        val starHolder = LinearLayout(context)
-        val star = View(context)
-        star.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT)
-        star.setBackgroundColor(starColor)
-        starHolder.addView(star)
+        val starHolder = Star(context)
+        val lightView = View(context)
+        lightView.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT)
+        lightView.setBackgroundColor(starColor)
+        starHolder.addView(lightView)
         starHolder.layoutParams = layoutParamsArray[Random.nextInt(layoutParamsArray.size)]
         addView(starHolder)
 
-        star.viewTreeObserver.addOnGlobalLayoutListener{
-            star.translationX = starDirection * star.width.toFloat()
+        lightView.viewTreeObserver.addOnGlobalLayoutListener{
+            lightView.translationX = starDirection * lightView.width.toFloat()
         }
         starHolder.viewTreeObserver.addOnGlobalLayoutListener {
             starHolder.rotation = starRotation
         }
     }
 
+    /**
+     * Enables star shooting.
+     */
     fun start(){
         if(shooting) return
 
         _shooting = true
 
         forEach { starHolder ->
-            shoot(starHolder as LinearLayout)
+            shoot(starHolder as Star)
         }
     }
 
+    /**
+     * Force stops star shooting.
+     */
     fun stop(){
         if(!shooting) return
 
@@ -195,12 +247,15 @@ class ShootingStar(context: Context, attrs: AttributeSet?): FrameLayout(context,
         delayHandler.removeCallbacksAndMessages(null)
         forEach { starHolder ->
             starHolder.animate().cancel()
-            val star = (starHolder as LinearLayout).getChildAt(0)
+            val star = (starHolder as Star).getChildAt(0)
             star.animate().cancel()
             star.translationX = starDirection * star.width.toFloat()
         }
     }
 
+    /**
+     * Requests to stop star shooting. This waits the star to complete shooting.
+     */
     fun requestStop(){
         if(!shooting) return
 
@@ -210,28 +265,54 @@ class ShootingStar(context: Context, attrs: AttributeSet?): FrameLayout(context,
         }, (1100 * ((11f - speed)/10f)).toLong())
     }
 
+    /**
+     * Add size param of star.
+     * @param[size] new size of star.
+     */
     fun addSize(size: Int){
         layoutParamsArray.add(LayoutParams(size, context.resources.getDimensionPixelSize(R.dimen.star_height)))
     }
 
+    /**
+     * Clears all size params of star.
+     */
     fun clearSizes(){
         layoutParamsArray.clear()
     }
 
+    /**
+     * Adds star with given count. Do NOT add too much stars, adjust [minStarDelay] and [maxStarDelay] instead.
+     * @param[count] Count of star to add
+     */
     fun addStars(count: Int){
         for(index in 0 until count){
             createStar()
-            shoot(getChildAt(childCount - 1) as LinearLayout)
+            shoot(getChildAt(childCount - 1) as Star)
         }
     }
 
+    /**
+     * Mark the first n stars to remove after completes shooting.
+     * @param[count] Count of star to remove
+     */
     fun requestRemoveStars(count: Int){
         for(index in 0 until count)
-            getChildAt(index).isEnabled = false
+            (getChildAt(index) as Star).markedToRemove = true
     }
 
+    /**
+     * Remove stars Immediately.
+     * * @param[count] Count of star to remove
+     */
     fun forceRemoveStars(count: Int){
         removeViews(0, count)
+    }
+
+    /**
+     * Custom LinearLayout class with markedToRemove flag.
+     */
+    class Star(context: Context):LinearLayout(context, null){
+        var markedToRemove = false
     }
 
 }
