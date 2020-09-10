@@ -10,4 +10,13 @@
         <attr name="itemTextColor" format="color"/>
         <attr name="bgColor" format="color"/>
     </declare-styleable>
+    <declare-styleable name="ShootingStar">
+        <attr name="shootingType" format="enum">
+            <enum name="dynamic" value="0"/>
+            <enum name="static" value="1"/>
+        </attr>
+        <attr name="maxStarCount" format="integer"/>
+        <attr name="starColor" format="color"/>
+        <attr name="starSizes" format="reference"/>
+    </declare-styleable>
 </resources>
