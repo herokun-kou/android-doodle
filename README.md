@@ -79,7 +79,8 @@ header와 footer는 메뉴 아이템들의 가장 위와 가장 아래에 표시
 주석을 읽어보시면 대강 사용법이 감이 오실거라 생각합니다.
 #### Kotlin
 뷰의 초기화는 아래와 같이 합니다. 먼저 AnimatedMenu를 가져온 후(ViewBinding으로도 가능합니다) 그룹, 아이템 배열을 만들어서 AnimatedMenu에 setGroupsAndItems를 호출해 설정합니다.   
-각 아이템의 클릭 액션은 아래의 setItemClickListener(groupPosition, itemPosition, listener)을 호출해 설정합니다.   
+각 아이템의 클릭 액션은 아래의 setItemClickListener(groupPosition, itemPosition, listener)을 호출해 설정합니다. 이 때 주의하실 점은, 아무 조건 없이 onClickListener 람다식을 채울 경우
+여러번 마구 누르면 리스너 액션이 두 번 이상 동작할 수 있다는 점입니다. 한 번만 동작하게 하려면 animating property와 hide() 함수를 사용해주시면 됩니다.   
 ```kotlin
 val animatedMenu: AnimatedMenu = findViewById(R.id.animated_menu)
 val animatedMenuGroups = arrayOf("그룹 1", "그룹 2")
@@ -89,7 +90,10 @@ val animatedMenuItems = arrayOf(
 )
 animatedMenu.setGroupsAndItems(animatedMenuGroups, animatedMenuItems)
 animatedMenu.setItemClickListener(1, 2){
-    // OnClickAction
+    if(!animatedMenu.animating){
+        hide()
+        //OnClickAction
+    }
 }
 ```
    
@@ -108,7 +112,7 @@ animatedMenu.addItem(0, 0, "아이템", false){ //애니메이션 없이 첫 번
     // OnClickAction
 }
 animatedMenu.removeItem(0, 0, false)        //애니메이션 없이 첫 그룹의 첫 아이템을 삭제
-animatedMenu.removeGroup(0, true)           //애니메이션 없이 첫 번째 그룹을 삭제
+animatedMenu.removeGroup(0, true)           //애니메이션과 함께 첫 번째 그룹을 삭제
 ```
    
 header와 footer도 동적으로 추가하거나 제거할 수 있습니다.   
