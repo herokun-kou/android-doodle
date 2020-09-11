@@ -4,10 +4,10 @@
 물론 스샷같은건 아직 없어서~~올리기 귀찮아서~~ 궁금하시면 직접 import하고 사용해보세요! (약팔이)
 
 ## Contents
-- [AnimatedMenu][##-AnimatedMenu]: 애니메이션이 있는 FrameLayout을 확장한 팝업 메뉴.
-- [ShootingStar][##-ShootingStar]: 안드로이드 화면에 내리는 FrameLayout을 확장한 별똥별 뷰.
-- [TreeItemDecoration][##-TreeItemDecoration]: RecyclerView 용 ItemDecoration을 확장한 클래스.
-- [Conclusion][##-Conclusion]
+- [AnimatedMenu](#AnimatedMenu): 애니메이션이 있는 FrameLayout을 확장한 팝업 메뉴.
+- [ShootingStar](#ShootingStar): 안드로이드 화면에 내리는 FrameLayout을 확장한 별똥별 뷰.
+- [TreeItemDecoration](#TreeItemDecoration): RecyclerView 용 ItemDecoration을 확장한 클래스.
+- [Conclusion](#Conclusion)
    
 ## AnimatedMenu
 동적 애니메이션이 있는 메뉴를 만듭니다.
@@ -189,7 +189,7 @@ Xml에 추가하는 것 만으로 별이 떨어지지는 않습니다. 다음은
 - addStars(count: Int) - 별을 추가합니다. 제한을 둔 사항은 없으나 많이 추가하면 퍼포먼스가 떨어지거나 기기에 악영향을 줄 수 있으니, 
 minStarDelay나 maxStarDelay를 조정하는 것을 더 추천합니다.
 - removeStars(count: Int) - 별을 강제로 제거합니다. 먼저 추가된 별들 부터 순서대로 제거되며, 떨어지고있는 별이 있더라도 상관없이 호출 시점에 모두 제거됩니다.
-- requestRemoveStars(count: Int) - 별을 제거하도록 뷰에 요청합니다. 이 경우 별 오브젝트에 특수한 표시를 추가하며, __떨어지는 것이 끝날 때__ 이 표시가 있는 별이 제거됩니다.
+- requestRemoveStars(count: Int) - 별을 제거하도록 뷰에 요청합니다. 이 경우 별 오브젝트에 특수한 표시를 추가하며, 떨어지는 것이 끝날 때 이 표시가 있는 별이 제거됩니다.
 딜레이 중인 별들도 제거되지 않으며 무조건 별이 떨어지고 난 직후에 이 표시가 있는지 확인하고 제거되므로 주의해주세요.
 - addSize(size: Int) - 별의 크기 값을 리스트에 추가합니다. 별의 크기는 별이 떨어지기 직전에 리스트에 있는 값들 중 랜덤하게 하나를 골라 설정되며, 
 기본적으로 50, 150, 250, 350, 450, 550의 값들이 추가되어있습니다.
