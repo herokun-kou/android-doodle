@@ -1,7 +1,13 @@
 # android-doodle
 안드로이드 낙서 라이브러리입니다. 그냥 심심풀이 낙서에요.   
-지금은 클래스 둘 뿐입니다. 그에 대한 내용은 아래에 있어요.   
+지금은 클래스 셋 뿐입니다. 그에 대한 내용은 아래에 있어요.   
 물론 스샷같은건 아직 없어서~~올리기 귀찮아서~~ 궁금하시면 직접 import하고 사용해보세요! (약팔이)
+
+## Contents
+- [AnimatedMenu][##-AnimatedMenu]: 애니메이션이 있는 FrameLayout을 확장한 팝업 메뉴.
+- [ShootingStar][##-ShootingStar]: 안드로이드 화면에 내리는 FrameLayout을 확장한 별똥별 뷰.
+- [TreeItemDecoration][##-TreeItemDecoration]: RecyclerView 용 ItemDecoration을 확장한 클래스.
+- [Conclusion][##-Conclusion]
    
 ## AnimatedMenu
 동적 애니메이션이 있는 메뉴를 만듭니다.
@@ -195,6 +201,138 @@ minStarDelay나 maxStarDelay를 조정하는 것을 더 추천합니다.
 별 너무 많이 추가하면 처음에는 멋진데 보면볼수록 이상해보이므로 그냥 진짜 별똥별처럼 한두개만 추가하는 것을 권장합니다.   
 나름 자원낭비 없이 만드려고 노력하긴 했지만 실패한 부분도 좀 있어서 실제로 쓰기엔 좀 부족할 수 있습니다...
    
+## TreeItemDecoration
+리스트 아이템의 왼쪽에 뷰를 그리는 클래스입니다. 1차원 리스트 아이템들이 그룹으로 분류되어 있으며 그 형태가 모든 리프노드가 같은 깊이를 가지는 트리일 때 유용합니다.   
+아이템의 왼쪽에 그리기 때문에 RecyclerView의 ViewHolder에 들어가는 뷰는 좌측 마진을 가져야 자연스럽게 표시되는 경우가 많으며, 같은 부모노드를 가지는 자식이 많을 경우 공간이 조금 낭비되는 경향이 있습니다.   
+중요한 점은 이 클래스를 사용하려면 RecyclerView.Adapter에 들어가는 데이터들이 트리형태로 정렬되어있어야 한다는 점입니다.   
+정렬된 데이터를 Adapter에 붙혔을 경우 같은 그룹 내의 가장 첫 리스트 아이템의 왼쪽에 헤더 뷰를 그리며, 그 아이템이 스크롤에 의해 화면 밖으로 나갈 경우 헤더 뷰는 RecyclerView의 최상위에 붙어서 사라지지 않고 있다가
+다음 그룹의 헤더 뷰가 올라올 때 밀려 올라가며 화면에서 사라집니다.   
+구글의 캘린더 앱을 보시면 있는 좌측의 날짜를 표시하는 뷰와 비슷하게 동작하지만 이 클래스는 깊이 라는 개념을 도입하여 그룹 안에 또다른 그룹이 있을 때 사용할 수 있습니다.   
+단, 이 클래스는 같은 깊이의 Decoration View일 경우 그 형태가 같아야한다는 제약이 있습니다. 물론 View의 visibility를 사용해 스위칭해줄 수는 있지만 리소스의 낭비가 될 가능성이 높아 추천하지 않습니다.      
+물론 트리의 최대 깊이가 1이더라도 사용할 수 있으므로 필요하다면 가져가서 써보세요.
+
+### Usage
+먼저 RecyclerView.Adapter를 만듭니다. 나머지는 일반적인 RecyclerView.Adapter의 작성 방식과 동일합니다만, 이 Adapter는 반드시 TreeItemDecoration.Helper 인터페이스를 implement해야 합니다.
+Helper 인터페이스는 다음 세 추상 함수를 가지며 각각 다음과 같습니다:   
+- getInternalNodeName(depth: Int, leafNodePosition: Int): String   
+데이터 리스트의 leafNodePosition 위치의 아이템의 부모 노드 중 depth 깊이에 있는 노드의 이름을 반환해야합니다. 이는 이전 아이템과 다음 아이템이 서로 다른 그룹에 있는지 구별하기 위함입니다.
+   
+- getDecorationViewWidth(depth: Int, leafNodePosition: Int): Int
+데이터 리스트의 leafNodePosition 위치의 아이템의 부모 노드 중 depth 깊이에 있는 노드가 가지는 Decoration View의 너비를 반환해야합니다. 같은 깊이라도 leafNodePosition에 따라 다른 너비를 반환하는게 가능합니다.   
+높이를 구하는 함수가 없는 이유는 높이의 경우 해당 Decoration View를 가지는 아이템의 View 높이에 의해 자동으로 결정되기 때문입니다.
+   
+- setUpDecoration(depth: Int, leafNodePosition: Int, decoView: TreeItemDecoration.Decoration)
+이 함수에서 뷰가 그려지기 직전에 뷰에 해야할 일을 정합니다. 이 때 세 번째 인수로 전달되는 Decoration 객체는 View를 가지고 있는 객체로, decoView.root.someView와 같이 호출할 수 있습니다.   
+예를 들면 이 함수에서 Decoration View에 포함된 TextView의 text나 ImageView의 image 등을 정할 수 있습니다.
+   
+그리고, 이 Adapter 클래스는 TreeItemDecoration.Decoration 클래스를 확장한 클래스를 포함해야합니다. 이 클래스는 Decoration View의 레퍼런스를 가지고 있는 객체입니다.
+이 클래스를 확장한 클래스에서 Decoration View가 가지는 하위 뷰(TextView나 ImageView같은)를 선언하고 생성자에서 findViewById()등을 사용해 정의해야합니다.   
+모든 깊이의 Decoration View가 같은 형태라면 한 개의 확장 클래스만 준비해도 되지만, 깊이마다 Decoration View의 형태가 다르다면 여러 개의 확장 클래스를 준비해야 합니다.
+    
+최종적으로 Adapter에서 필요한 추가적인 내용은 아래와 같습니다. 
+```kotlin
+class SomeAdapter(private val data: Array<SomeDataClass>): RecyclerView.Adapter<SomeViewHolder>, TreeItemDecoration.Helper {
+    // ...
+
+    override fun getInternalNodeName(depth: Int, leafNodePosition: Int): String {
+        // TODO("Not yet implemented")
+    }
+
+    override fun getDecorationViewWidth(depth: Int, leafNodePosition: Int): Int {
+        // TODO("Not yet implemented")
+    }
+
+    override fun setupDecoration(depth: Int, leafNodePosition: Int, decoView: TreeItemDecoration.Decoration) {
+        // TODO("Not yet implemented")
+    }
+
+    class SomeDepth1Decoration(val root: View): Decoration(root){
+        val text: TextView
+        val image: ImageView
+    
+        init{
+            text = root.findViewById(R.id.depth1_text)
+            image = root.findViewById(R.id.depth1_image)
+        }   
+    }
+    
+    class SomeDepth2Decoration(val root: View): Decoration(root){
+        val text: TextView
+        val text2: TextView
+    
+        init{
+            text = root.findViewById(R.id.depth2_text)
+            text2 = root.findViewById(R.id.depth2_text2)
+        }   
+    }
+
+} 
+```
+   
+추가로, 데이터의 구조를 어떤 식으로 표현해야하면 좋을지 감이 안잡히신다면 다음을 참고해보세요:
+```kotlin
+data class SomeDataClass(
+    val id: Int,
+    val internalNodes: Array<String>,
+    val content: String
+    // ...
+)
+```
+internalNodes property는 해당 리프 노드가 가지는 부모와 부모의 부모, 부모의 부모의 부모... 의 이름을 배열 형태로 저장하는 객체로 정렬이 되어있어야 합니다.
+이렇게 구조를 정했을 경우 Helper의 세 함수는 다음과 같이 재정의될 수 있습니다:
+```kotlin
+    override fun getInternalNodeName(depth: Int, leafNodePosition: Int): String {
+        return data[leafNodePosition].internalNodes[depth]
+    }
+
+    override fun getDecorationViewWidth(depth: Int, leafNodePosition: Int): Int {
+        // leafNodePosition과 depth에 따라 다른 너비를 지정할 수 있음.
+        return 150
+    }
+
+    override fun setupDecoration(depth: Int, leafNodePosition: Int, decoView: TreeItemDecoration.Decoration) {
+        // 모든 Decoration View에 대해 같은 Decoration 확장 클래스를 사용했다면 
+        // is 대신 depth와 leafNodePosition을 통해 구별할 수도 있음.
+        if(decoView is SomeDepth1Decoration){
+            decoView.text.text = data[leafNodePosition].internalNodes[depth]
+            decoView.image.setImageResource(R.drawable.someImage)
+        }else if(decoView is SomeDepth2Decoration){
+            decoView.text.text = "AAAA"
+            decoView.text2.text = data[leafNodePosition].internalNodes[depth]
+        }
+    }
+```
+   
+거의 끝났습니다. 이제 어딘가에서 Adapter 객체를 만들고, TreeItemDecoration 객체를 만들고 붙혀주면 됩니다.   
+그것은 아래와 같이 할 수 있습니다:
+```kotlin
+val someView = LayoutInflator.from(context).inflate(R.layout.some_view, null, false)
+val someOtherView = LayoutInflator.from(context).inflate(R.layout.some_other_view, null, false)
+val decorations = arrayOf(SomeDepth1Decoration(someView), SomeDepth2Decoration(someOtherView))
+val someAdapter = SomeAdapter(data)
+val decoration = TreeItemDecoration(2, decorations, someAdapter)
+
+mainRecycler.adapter = someAdapter
+mainRecycler.layoutManager = LinearLayoutManager(context)
+mainRecycler.addItemDecoration(decoration)
+```
+TreeItemDecoration의 생성자는 다음과 같습니다.
+- TreeItemDecoration(maxDepth: Int, decorationsByDepth: Array<Decoration>, helper: Helper)
+    - maxDepth: 이 트리 형태가 가지는 최대 깊이로, 모든 leaf node들은 이 깊이에 있어야 합니다.. 루트노드 > 그룹 1-1 > 그룹 1-1-1 > 리프노드 와 같은 구조일 경우 이 값은 3이 됩니다.
+    - decorationByDepth: 깊이에 따른 Decoration View로, 반드시 배열 형태로 전달되어야 하며 최대 깊이가 1이더라도 arrayOf를 사용해 배열로 바꿔 전달해야합니다.
+    - helper: Helper 인터페이스로 Adapter에서 implement했으니 Adapter를 넘겨주면 됩니다.
+   
+끝났습니다! 추가로 다른 Decoration과 혼합하여 사용할 수 있으니 Offset이나 다른 Decoration을 만들어도 됩니다.
+
+### Caution
+- Decoration View의 높이는 그것이 초기에 그려지는 위치에 있는 아이템의 높이보다 클 수 없습니다. 만일 크다면 아랫부분이 잘려 표시되니 주의해주세요.
+- Decoration 클래스에 전달하는 View가 코드상에서 만들어졌다면(TextView(this)와 같이) 반드시 layoutParams property를 지정해주어야 합니다. 그렇지 않을 경우 NullPointerException이 발생되므로 주의해주세요.
+- 같은 깊이의 Decoration View는 같은 형태를 가지는 것이 좋습니다. 너비는 깊이가 같더라도 다르게 줄 수 있지만 View 자체는 그렇지 않습니다. 앞에서 언급했듯 View의 visibility를 사용해 
+setupDecoration() 함수에서 스위칭해주는 것도 가능하긴 합니다만, 리소스의 낭비가 발생할 수 있으니까요. 불가능한 건 아니지만 추천하지 않는 방식입니다.
+   
+### Plus
+이전에 작업하던 개인용 토이 프젝에서 영감을 받았습니다. 보니까 구글 캘린더의 좌측 헤더와도 비슷하더라고요.   
+코드에 Lint가 하나도 없어서 좋네요. 히히. ~~근데 README에 Lint가 생겼음~~
 
 ## Conclusion
 패키지에 라이브러리 aar파일이 있을겁니다. 흥미가 가신다면 가져가셔서 써보세요.   
