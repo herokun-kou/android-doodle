@@ -4,10 +4,24 @@
 물론 스샷같은건 아직 없어서~~올리기 귀찮아서~~ 궁금하시면 직접 import하고 사용해보세요! (약팔이)
 
 ## Contents
+- [Installation](#Installation): 간단한 설치 방법
 - [AnimatedMenu](#AnimatedMenu): 애니메이션이 있는 FrameLayout을 확장한 팝업 메뉴.
 - [ShootingStar](#ShootingStar): 안드로이드 화면에 내리는 FrameLayout을 확장한 별똥별 뷰.
 - [TreeItemDecoration](#TreeItemDecoration): RecyclerView 용 ItemDecoration을 확장한 클래스.
 - [Conclusion](#Conclusion)
+
+## Installation
+설치 방법입니다. 
+1. 먼저 오른쪽의 Packages 메뉴에서 com.herok.doodle.final 항목으로 들어갑니다.
+2. 오른쪽 Assets 메뉴에서 final-(버전명).aar 를 클릭하여 aar 파일을 다운로드합니다.
+3. Android Studio의 File > New > New Module 을 클릭합니다.
+4. 스크롤을 내려 Import .JAR/.AAR Package를 더블클릭합니다.
+5. 다운로드 받은 aar파일을 선택하고 Finish를 누릅니다.
+6. app 모듈의 build.gradle 파일의 dependencies에 다음 한 줄을 추가합니다.
+```
+implementation project: 'final-1.2.0'
+```
+끝났습니다! 이제 제가 한 몇 가지 낙서를 여러분도 쓸 수 있게 되었습니다.
    
 ## AnimatedMenu
 동적 애니메이션이 있는 메뉴를 만듭니다.
