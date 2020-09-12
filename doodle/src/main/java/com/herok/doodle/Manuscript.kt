@@ -142,8 +142,8 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
             if(it.length > maxLength) maxLength = it.length
         }
 
-        val size1 = maxLength.coerceAtLeast(minimumColumnCount) * textRectSize + paddingLeft + paddingRight
-        val size2: Int
+        val sizeOfItself1 = maxLength.coerceAtLeast(minimumColumnCount) * textRectSize + paddingLeft + paddingRight
+        val sizeOfItself2: Int
 
         val measuredWidth: Int
         val measuredHeight: Int
@@ -151,46 +151,44 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
         if(orientation == ORIENTATION_HORIZONTAL){
             measuredWidth = when(widthMode){
                 MeasureSpec.UNSPECIFIED, MeasureSpec.EXACTLY -> MeasureSpec.getSize(widthMeasureSpec)
-                MeasureSpec.AT_MOST -> size1.coerceAtMost(MeasureSpec.getSize(widthMeasureSpec))
-                else -> size1
+                MeasureSpec.AT_MOST -> sizeOfItself1.coerceAtMost(MeasureSpec.getSize(widthMeasureSpec))
+                else -> sizeOfItself1
             }
 
-            maxColumnCountInScreen = getMaxColumnCountInScreen(size1, measuredWidth)
+            maxColumnCountInScreen = getMaxLetterCountInScreen(sizeOfItself1, measuredWidth)
 
-            sentences.clear()
             sentences = separateText(maxColumnCountInScreen.coerceAtLeast(minimumColumnCount)) as MutableList<String>
 
-            size2 = sentences.size * (textRectSize + marginBetweenSentences) + marginBetweenSentences + paddingTop + paddingBottom
+            sizeOfItself2 = sentences.size * (textRectSize + marginBetweenSentences) + marginBetweenSentences + paddingTop + paddingBottom
 
             maxMeasuredSize2 = MeasureSpec.getSize(heightMeasureSpec)
-            fullSize2 = size2
+            fullSize2 = sizeOfItself2
 
             measuredHeight = when(heightMode){
                 MeasureSpec.UNSPECIFIED, MeasureSpec.EXACTLY -> MeasureSpec.getSize(heightMeasureSpec)
-                MeasureSpec.AT_MOST -> size2
-                else -> size2
+                MeasureSpec.AT_MOST -> sizeOfItself2
+                else -> sizeOfItself2
             }
         } else {
             measuredHeight = when(heightMode){
                 MeasureSpec.UNSPECIFIED, MeasureSpec.EXACTLY -> MeasureSpec.getSize(heightMeasureSpec)
-                MeasureSpec.AT_MOST -> size1.coerceAtMost(MeasureSpec.getSize(heightMeasureSpec))
-                else -> size1
+                MeasureSpec.AT_MOST -> sizeOfItself1.coerceAtMost(MeasureSpec.getSize(heightMeasureSpec))
+                else -> sizeOfItself1
             }
 
-            maxColumnCountInScreen = getMaxColumnCountInScreen(size1, measuredHeight)
+            maxColumnCountInScreen = getMaxLetterCountInScreen(sizeOfItself1, measuredHeight)
 
-            sentences.clear()
             sentences = separateText(maxColumnCountInScreen.coerceAtLeast(minimumColumnCount)) as MutableList<String>
 
-            size2 = sentences.size * (textRectSize + marginBetweenSentences) + marginBetweenSentences + paddingTop + paddingBottom
+            sizeOfItself2 = sentences.size * (textRectSize + marginBetweenSentences) + marginBetweenSentences + paddingTop + paddingBottom
 
             maxMeasuredSize2 = MeasureSpec.getSize(widthMeasureSpec)
-            fullSize2 = size2
+            fullSize2 = sizeOfItself2
 
             measuredWidth = when(widthMode){
                 MeasureSpec.UNSPECIFIED, MeasureSpec.EXACTLY -> MeasureSpec.getSize(widthMeasureSpec)
-                MeasureSpec.AT_MOST -> size2
-                else -> size2
+                MeasureSpec.AT_MOST -> sizeOfItself2
+                else -> sizeOfItself2
             }
         }
 
@@ -237,7 +235,7 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
         canvas?.restore()
     }
 
-    private fun getMaxColumnCountInScreen(size1: Int, measuredSize: Int): Int{
+    private fun getMaxLetterCountInScreen(size1: Int, measuredSize: Int): Int{
         var newSize1 = size1
         while(newSize1 > measuredSize){
             newSize1 -= textRectSize
@@ -247,6 +245,7 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
     }
 
     private fun separateText(maxLength: Int): List<String>{
+        sentences.clear()
         val newLinedSentences = text.split("\n")
         if(maxLength > 0){
             newLinedSentences.forEach {
