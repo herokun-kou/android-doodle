@@ -5,12 +5,15 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import kotlin.math.abs
 
 class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
 
     companion object {
+        const val TAG = "Manuscript"
+
         const val ORIENTATION_HORIZONTAL = 0
         const val ORIENTATION_VERTICAL_TO_LEFT = 1
         const val ORIENTATION_VERTICAL_TO_RIGHT = -1
@@ -43,12 +46,22 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
     var minimumColumnCount = -1
         set(value) {
             field = value
+            if((minimumColumnCount != -1 && maximumColumnCount != -1) && (minimumColumnCount > maximumColumnCount)){
+                Log.e(TAG, "Passed minimum column count value is bigger than maximum column count.")
+                Log.e(TAG, "Setting maximum column count to minimum column count...")
+                maximumColumnCount = minimumColumnCount
+            }
             requestLayout()
         }
 
     var maximumColumnCount = -1
         set(value) {
             field = value
+            if((minimumColumnCount != -1 && maximumColumnCount != -1) && (minimumColumnCount > maximumColumnCount)){
+                Log.e(TAG, "Passed maximum column count value is smaller than minimum column count.")
+                Log.e(TAG, "Setting minimum column count to maximum column count...")
+                minimumColumnCount = maximumColumnCount
+            }
             requestLayout()
         }
 
@@ -125,15 +138,15 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        if((minimumColumnCount != -1 && maximumColumnCount != -1) && (minimumColumnCount > maximumColumnCount)){
+            throw Exception("minimumColumnCount is bigger than maximumColumnCount!!")
+        }
+
         val widthMode = MeasureSpec.getMode(widthMeasureSpec)
         val heightMode = MeasureSpec.getMode(heightMeasureSpec)
 
         textRectSize = textSize + textPadding
         marginBetweenSentences = (textSize / 2.5f).toInt()
-
-        if((minimumColumnCount != -1 && maximumColumnCount != -1) && (minimumColumnCount > maximumColumnCount)){
-            throw Exception("minimumColumnCount is bigger than maximumColumnCount!!")
-        }
 
         sentences.clear()
         sentences = separateText(maximumColumnCount) as MutableList<String>
