@@ -22,4 +22,19 @@
             <enum name="STATIC" value="1"/>
         </attr>
     </declare-styleable>
+    <declare-styleable name="Manuscript">
+        <attr name="manuscriptText" format="string"/>
+        <attr name="manuscriptTextColor" format="color"/>
+        <attr name="manuscriptColor" format="color"/>
+        <attr name="manuscriptTextSize" format="dimension"/>
+        <attr name="minimumColumnCount" format="integer"/>
+        <attr name="maximumColumnCount" format="integer"/>
+        <attr name="removeHorizontalOutline" format="boolean"/>
+        <attr name="removeLineNumber" format="boolean"/>
+        <attr name="manuscriptOrientation" format="enum">
+            <enum name="horizontal" value="0"/>
+            <enum name="vertical_toLeft" value="1"/>
+            <enum name="vertical_toRight" value="-1"/>
+        </attr>
+    </declare-styleable>
 </resources>
