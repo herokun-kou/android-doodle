@@ -10,6 +10,12 @@ import kotlin.math.abs
 
 class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
 
+    companion object {
+        const val ORIENTATION_HORIZONTAL = 0
+        const val ORIENTATION_VERTICAL_TO_LEFT = 1
+        const val ORIENTATION_VERTICAL_TO_RIGHT = -1
+    }
+
     var text = ""
         set(value) {
             field = value
@@ -142,7 +148,7 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
         val measuredWidth: Int
         val measuredHeight: Int
 
-        if(orientation == 0){
+        if(orientation == ORIENTATION_HORIZONTAL){
             measuredWidth = when(widthMode){
                 MeasureSpec.UNSPECIFIED, MeasureSpec.EXACTLY -> MeasureSpec.getSize(widthMeasureSpec)
                 MeasureSpec.AT_MOST -> size1.coerceAtMost(MeasureSpec.getSize(widthMeasureSpec))
@@ -209,7 +215,7 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
         val maxTextLengthInRow = maxColumnCountInScreen.coerceAtLeast(minimumColumnCount)
 
         canvas?.save()
-        if(orientation == 1 && fullSize2 - maxMeasuredSize2 > 0){
+        if(orientation == ORIENTATION_VERTICAL_TO_LEFT && fullSize2 - maxMeasuredSize2 > 0){
             canvas?.translate(-(fullSize2 - maxMeasuredSize2).toFloat(), 0f)
         }
 
@@ -266,17 +272,17 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
         var x = 0f; var y = 0f
 
         when(orientation){
-            0 -> {
+            ORIENTATION_HORIZONTAL -> {
                 x = paddingLeft +
                         (textRectSize * letterIndex + textRectSize / 2f)
                 y = paddingTop +
                         ((marginBetweenSentences + textRectSize) * (sentenceIndex + 1) + diff - textHeight/2f - (textRectSize  - textHeight)/2f)
             }
-            1 -> {
+            ORIENTATION_VERTICAL_TO_LEFT -> {
                 x = (canvas?.width ?: measuredWidth) - (paddingRight + textRectSize/2f + (marginBetweenSentences) * (sentenceIndex + 1) + sentenceIndex * textRectSize)
                 y = paddingTop + ((letterIndex + 1) * textRectSize) + diff - textHeight/2f - (textRectSize  - textHeight)/2f
             }
-            -1 -> {
+            ORIENTATION_VERTICAL_TO_RIGHT -> {
                 x = paddingLeft + textRectSize/2f + (marginBetweenSentences) * (sentenceIndex + 1) + textRectSize * sentenceIndex
                 y = paddingTop + ((letterIndex + 1) * textRectSize) + diff - textHeight/2f - (textRectSize  - textHeight)/2f
             }
@@ -291,7 +297,7 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
 
     private fun drawLetterLine(canvas: Canvas?, letterIndex: Int, sentenceIndex: Int){
         when(orientation) {
-            0 -> {
+            ORIENTATION_HORIZONTAL -> {
                 val x = paddingLeft + (letterIndex * textRectSize).toFloat()
                 val yStart =
                     paddingTop + ((sentenceIndex + 1) * marginBetweenSentences + sentenceIndex * textRectSize).toFloat()
@@ -300,7 +306,7 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
 
                 canvas?.drawLine(x, yStart, x, yStop, linePaint)
             }
-            1 -> {
+            ORIENTATION_VERTICAL_TO_LEFT -> {
                 val xStart = (canvas?.width ?: measuredWidth) -
                         (paddingRight + ((sentenceIndex + 1) * marginBetweenSentences + sentenceIndex * textRectSize)).toFloat()
                 val xStop = (canvas?.width ?: measuredWidth) -
@@ -309,7 +315,7 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
 
                 canvas?.drawLine(xStart, y, xStop, y, linePaint)
             }
-            -1 -> {
+            ORIENTATION_VERTICAL_TO_RIGHT -> {
                 val xStart =
                     paddingLeft + ((sentenceIndex + 1) * marginBetweenSentences + sentenceIndex * textRectSize).toFloat()
                 val xStop =
@@ -324,16 +330,16 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
     private fun drawLineNumber(canvas: Canvas?, sentenceIndex: Int, maxTextLengthInRow: Int){
         var x = 0f; var y = 0f
         when(orientation){
-            0 -> {
+            ORIENTATION_HORIZONTAL -> {
                 x = paddingLeft.toFloat() + 7.5f
                 y = paddingTop + ((sentenceIndex + 1) * marginBetweenSentences + sentenceIndex * textRectSize).toFloat() - lineNumberPaint.descent() -1.2f
             }
-            1 -> {
+            ORIENTATION_VERTICAL_TO_LEFT -> {
                 x = (canvas?.width ?: width) -
                         (paddingRight + ((sentenceIndex + 1) * marginBetweenSentences + sentenceIndex * textRectSize).toFloat()) + lineNumberPaint.descent()
                 y = paddingTop.toFloat() + 7.5f
             }
-            -1 -> {
+            ORIENTATION_VERTICAL_TO_RIGHT -> {
                 lineNumberPaint.textAlign = Paint.Align.RIGHT
                 x = (paddingLeft + ((sentenceIndex + 1) * marginBetweenSentences + sentenceIndex * textRectSize).toFloat()) - lineNumberPaint.descent()
                 y = paddingTop.toFloat() + 7.5f
@@ -351,7 +357,7 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
 
     private fun drawSentenceLine(canvas: Canvas?, sentenceIndex: Int, maxTextLengthInRow: Int){
         when(orientation){
-            0 -> {
+            ORIENTATION_HORIZONTAL -> {
                 val startX = paddingLeft.toFloat()
                 val stopX = paddingLeft + (maxTextLengthInRow * textRectSize).toFloat()
                 val topStartStopY = paddingTop + ((sentenceIndex + 1) * marginBetweenSentences + sentenceIndex * textRectSize).toFloat()
@@ -360,7 +366,7 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
                 canvas?.drawLine(startX, topStartStopY, stopX, topStartStopY, linePaint)
                 canvas?.drawLine(startX, bottomStartStopY, stopX, bottomStartStopY, linePaint)
             }
-            1 -> {
+            ORIENTATION_VERTICAL_TO_LEFT -> {
                 val rightStartStopX = (canvas?.width ?: measuredWidth) - paddingRight - ((sentenceIndex + 1) * marginBetweenSentences + sentenceIndex * textRectSize).toFloat()
                 val leftStartStopX = (canvas?.width ?: measuredWidth) - paddingRight - ((sentenceIndex + 1) * marginBetweenSentences + (sentenceIndex + 1) * textRectSize).toFloat()
                 val startY = paddingTop.toFloat()
@@ -369,7 +375,7 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
                 canvas?.drawLine(rightStartStopX, startY, rightStartStopX, stopY, linePaint)
                 canvas?.drawLine(leftStartStopX, startY, leftStartStopX, stopY, linePaint)
             }
-            -1 -> {
+            ORIENTATION_VERTICAL_TO_RIGHT -> {
                 val leftStartStopX = paddingLeft + ((sentenceIndex + 1) * marginBetweenSentences + sentenceIndex * textRectSize).toFloat()
                 val rightStartStopX = paddingLeft + ((sentenceIndex + 1) * marginBetweenSentences + (sentenceIndex + 1) * textRectSize).toFloat()
                 val startY = paddingTop.toFloat()
@@ -384,13 +390,13 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
     private fun drawOuterLines(canvas: Canvas?, maxTextLengthInRow: Int){
         var x1 = 0f; var y1 = 0f; var x2 = 0f; var y2 = 0f
         when(orientation){
-            0 -> {
+            ORIENTATION_HORIZONTAL -> {
                 x1 = paddingLeft.toFloat()
                 y1 = paddingTop.toFloat()
                 x2 = paddingLeft + (textRectSize * maxTextLengthInRow).toFloat()
                 y2 = paddingTop + ((sentences.size + 1) * marginBetweenSentences + sentences.size * textRectSize).toFloat()
             }
-            1, -1 -> {
+            ORIENTATION_VERTICAL_TO_LEFT, ORIENTATION_VERTICAL_TO_RIGHT -> {
                 x1 = paddingLeft.toFloat()
                 y1 = paddingTop.toFloat()
                 x2 = paddingLeft + ((sentences.size + 1) * marginBetweenSentences + sentences.size * textRectSize).toFloat()
