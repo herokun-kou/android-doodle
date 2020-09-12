@@ -329,20 +329,21 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
 
     private fun drawLineNumber(canvas: Canvas?, sentenceIndex: Int, maxTextLengthInRow: Int){
         var x = 0f; var y = 0f
+        val horizontalTransition = 7.5f
         when(orientation){
             ORIENTATION_HORIZONTAL -> {
-                x = paddingLeft.toFloat() + 7.5f
+                x = paddingLeft + horizontalTransition
                 y = paddingTop + ((sentenceIndex + 1) * marginBetweenSentences + sentenceIndex * textRectSize).toFloat() - lineNumberPaint.descent() -1.2f
             }
             ORIENTATION_VERTICAL_TO_LEFT -> {
                 x = (canvas?.width ?: width) -
                         (paddingRight + ((sentenceIndex + 1) * marginBetweenSentences + sentenceIndex * textRectSize).toFloat()) + lineNumberPaint.descent()
-                y = paddingTop.toFloat() + 7.5f
+                y = paddingTop + horizontalTransition
             }
             ORIENTATION_VERTICAL_TO_RIGHT -> {
                 lineNumberPaint.textAlign = Paint.Align.RIGHT
                 x = (paddingLeft + ((sentenceIndex + 1) * marginBetweenSentences + sentenceIndex * textRectSize).toFloat()) - lineNumberPaint.descent()
-                y = paddingTop.toFloat() + 7.5f
+                y = paddingTop + horizontalTransition
             }
         }
         canvas?.save()
