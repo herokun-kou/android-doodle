@@ -4,8 +4,10 @@
 물론 스샷같은건 아직 없어서~~올리기 귀찮아서~~ 궁금하시면 직접 import하고 사용해보세요! (약팔이)
 
 ## Contents
+* 본문은 추가된 순서대로, 목차는 ABC순으로 정렬되어있습니다.
 - [Installation](#Installation): 간단한 설치 방법
 - [AnimatedMenu](#AnimatedMenu): 애니메이션이 있는 FrameLayout을 확장한 팝업 메뉴.
+- [Manuscript](#Manuscript): 원고지 뷰.
 - [ShootingStar](#ShootingStar): 안드로이드 화면에 내리는 FrameLayout을 확장한 별똥별 뷰.
 - [TreeItemDecoration](#TreeItemDecoration): RecyclerView 용 ItemDecoration을 확장한 클래스.
 - [Conclusion](#Conclusion)
@@ -187,27 +189,42 @@ Xml에서 속성으로 정의된 별의 수 만큼 Star View가 추가되며, �
     app:shootingType="DYNAMIC" />
 ```
 각 옵션들을 설명하면 다음과 같습니다:
-- starCount: 한 시점에 최대로 보일 수 있는 별의 수입니다.
-- minStarDelay: 한 개의 별이 떨어진 후 재조정을 통해 다시 떨어지기까지의 최소 지연시간입니다. 이 값이 있다고 해서 한 시점에 한 개의 별만 떨어지는 것이 아님에 유의합니다.
-- maxStarDelay: 한 개의 별이 떨어진 후 재조정을 통해 다시 떨어지기까지의 최대 지연시간입니다.
-- starRotation: 별이 떨어지는 각도입니다. 모든 별이 이 각도를 통해 떨어지며 별 하나하나의 각도를 랜덤하게 부여하는 기능은 아직 없습니다. -90 < 각도 < 90도 이여야 합니다.
-- starColor: 별의 색입니다. 반투명하게 하는 것이 조금 더 보기 좋습니다.
-- shootingSpeed: 별이 떨어지는 속도입니다. 빠르게 떨어지게 하고 싶다면 값을 크게 주시면 됩니다. 최소 1에서 최대 10의 값을 부여할 수 있습니다.
-- shootingType: 떨어지는 형태를 정합니다. STATIC과 DYNAMIC이 있으며, 큰 차이는 없으나 잘 보면 조금 다릅니다. 이건 말로 설명하기가 애매하니 궁금하시면 해보세요!
+- starCount   
+한 시점에 최대로 보일 수 있는 별의 수입니다.
+- minStarDelay   
+한 개의 별이 떨어진 후 재조정을 통해 다시 떨어지기까지의 최소 지연시간입니다. 이 값이 있다고 해서 한 시점에 한 개의 별만 떨어지는 것이 아님에 유의합니다.
+- maxStarDelay   
+한 개의 별이 떨어진 후 재조정을 통해 다시 떨어지기까지의 최대 지연시간입니다.
+- starRotation   
+별이 떨어지는 각도입니다. 모든 별이 이 각도를 통해 떨어지며 별 하나하나의 각도를 랜덤하게 부여하는 기능은 아직 없습니다. -90 < 각도 < 90도 이여야 합니다.
+- starColor   
+별의 색입니다. 반투명하게 하는 것이 조금 더 보기 좋습니다.
+- shootingSpeed   
+별이 떨어지는 속도입니다. 빠르게 떨어지게 하고 싶다면 값을 크게 주시면 됩니다. 최소 1에서 최대 10의 값을 부여할 수 있습니다.
+- shootingType   
+떨어지는 형태를 정합니다. STATIC과 DYNAMIC이 있으며, 큰 차이는 없으나 잘 보면 조금 다릅니다. 이건 말로 설명하기가 애매하니 궁금하시면 해보세요!
    
 #### Kotlin
 Xml에 추가하는 것 만으로 별이 떨어지지는 않습니다. 다음은 코드에서 호출할 수 있는 함수들입니다.
-- start() - 별들이 떨어지도록 합니다. 이미 별들이 떨어지고있는 중에 이 함수를 호출하면 무시됩니다.
-- stop() - 강제로 모든 별들이 떨어지는 것을 중단합니다. 떨어지고 있는 별이 있을경우 중단되기 때문에 속도가 느릴경우 별이 사라지는게 보일 수 있습니다.
-- requestStop() - 별이 떨어지는 것을 멈추도록 뷰에 요청합니다. 딜레이 중인 별들은 딜레이가 취소되며, 떨어지고 있는 별이 있을 경우 떨어지는 것이 끝날때 까지 기다립니다.
-- addStars(count: Int) - 별을 추가합니다. 제한을 둔 사항은 없으나 많이 추가하면 퍼포먼스가 떨어지거나 기기에 악영향을 줄 수 있으니, 
+- start()   
+별들이 떨어지도록 합니다. 이미 별들이 떨어지고있는 중에 이 함수를 호출하면 무시됩니다.
+- stop()   
+강제로 모든 별들이 떨어지는 것을 중단합니다. 떨어지고 있는 별이 있을경우 중단되기 때문에 속도가 느릴경우 별이 사라지는게 보일 수 있습니다.
+- requestStop()   
+별이 떨어지는 것을 멈추도록 뷰에 요청합니다. 딜레이 중인 별들은 딜레이가 취소되며, 떨어지고 있는 별이 있을 경우 떨어지는 것이 끝날때 까지 기다립니다.
+- addStars(count: Int)   
+별을 추가합니다. 제한을 둔 사항은 없으나 많이 추가하면 퍼포먼스가 떨어지거나 기기에 악영향을 줄 수 있으니, 
 minStarDelay나 maxStarDelay를 조정하는 것을 더 추천합니다.
-- removeStars(count: Int) - 별을 강제로 제거합니다. 먼저 추가된 별들 부터 순서대로 제거되며, 떨어지고있는 별이 있더라도 상관없이 호출 시점에 모두 제거됩니다.
-- requestRemoveStars(count: Int) - 별을 제거하도록 뷰에 요청합니다. 이 경우 별 오브젝트에 특수한 표시를 추가하며, 떨어지는 것이 끝날 때 이 표시가 있는 별이 제거됩니다.
+- removeStars(count: Int)   
+별을 강제로 제거합니다. 먼저 추가된 별들 부터 순서대로 제거되며, 떨어지고있는 별이 있더라도 상관없이 호출 시점에 모두 제거됩니다.
+- requestRemoveStars(count: Int)   
+별을 제거하도록 뷰에 요청합니다. 이 경우 별 오브젝트에 특수한 표시를 추가하며, 떨어지는 것이 끝날 때 이 표시가 있는 별이 제거됩니다.
 딜레이 중인 별들도 제거되지 않으며 무조건 별이 떨어지고 난 직후에 이 표시가 있는지 확인하고 제거되므로 주의해주세요.
-- addSize(size: Int) - 별의 크기 값을 리스트에 추가합니다. 별의 크기는 별이 떨어지기 직전에 리스트에 있는 값들 중 랜덤하게 하나를 골라 설정되며, 
+- addSize(size: Int)   
+별의 크기 값을 리스트에 추가합니다. 별의 크기는 별이 떨어지기 직전에 리스트에 있는 값들 중 랜덤하게 하나를 골라 설정되며, 
 기본적으로 50, 150, 250, 350, 450, 550의 값들이 추가되어있습니다.
-- clearSize() - 별의 크기 값이 담긴 리스트를 비웁니다. 기본적으로 추가된 값들을 지우고 다른 값들을 넣을 때 호출하시면 됩니다.
+- clearSize()   
+별의 크기 값이 담긴 리스트를 비웁니다. 기본적으로 추가된 값들을 지우고 다른 값들을 넣을 때 호출하시면 됩니다.
    
 코드에서는 starCount를 제외한 모든 xml 속성을 같은 이름으로 설정해줄 수 있으며, 설정하면 즉시 반영되므로 별다른 함수를 호출할 필요는 없습니다.
    
@@ -347,6 +364,58 @@ setupDecoration() 함수에서 스위칭해주는 것도 가능하긴 합니다�
 ### Plus
 이전에 작업하던 개인용 토이 프젝에서 영감을 받았습니다. 보니까 구글 캘린더의 좌측 헤더와도 비슷하더라고요.   
 코드에 Lint가 하나도 없어서 좋네요. 히히. ~~근데 README에 Lint가 생겼음~~
+   
+## Manuscript
+원고지 형태의 뷰입니다.   
+다른 건 없고 그리기만 하는 뷰라 말 그대로 그리기만 할 뿐 다른건 안해서... 그냥 특정 텍스트를 강조하고 싶을 때 한 문장 정도 이 뷰를 사용하면 좋을 것 같네요.   
+영미권 원고지는 어떻게 생겼는지 모르지만 이 뷰는 일단 한국의 원고지와 동일하게 생겼습니다.   
+   
+### Usage
+Xml파일에 다음을 추가하면 완료입니다.
+```xml
+<com.herok.doodle.Manuscript
+    android:id="@+id/manuscript"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="15dp"
+    app:manuscriptOrientation="horizontal"
+    app:manuscriptTextSize="17sp"
+    app:manuscriptColor="#60FFFFFF"
+    app:manuscriptTextColor="#FFFFFF"
+    app:minimumCellsPerLine="4"
+    app:maximumCellsPerLine="10"
+    app:removeBeginningAndEndOutline="false"
+    app:removeLineNumber="false"
+    app:manuscriptText="@string/manuscript_text"/>
+```
+옵션이 많아보이지만 app:manuscriptText를 제외한 모든 속성은 생략 가능한 속성이기 때문에 원하는 입맛대로 추가해주시면 됩니다.   
+각 옵션들의 의미는 아래와 같습니다.
+- manuscriptOrientation="horizontal|vertical_toLeft|vertical_toRight"   
+원고지의 방향을 정합니다. 각각 가로방향, 세로방향(오른쪽에서 왼쪽), 세로방향(왼쪽에서 오른쪽)이며 vertical_toLeft의 경우 내용이 뷰의 최대 크기보다 크면 왼쪽으로 내용물이 넘칩니다.
+- manuscriptTextSize="dimension"   
+원고지 텍스트의 크기를 정합니다. 이 경우 원고지의 크기도 같이 커집니다.
+- manuscriptColor="color"   
+원고지 선들의 색을 정합니다.
+- manuscriptTextColor="color"   
+원고지 텍스트의 색을 정합니다.
+- minimumCellsPerLine="integer"   
+텍스트 한 줄 당 최소로 가져야하는 칸 수를 결정합니다. 텍스트의 길이는 짧은데 최소한 몇 개의 칸은 필요로할 경우 유용합니다.
+- maximumCellsPerLine="integer"   
+텍스트 한 줄 당 최대로 가질 수 있는 칸 수를 결정합니다. 뷰의 너비(높이)와 별개로 최대의 칸 수를 정해줄 수 있습니다.
+- removeBeginningAndEndOutline="boolean"   
+원고지의 좌/우(manuscriptOrientation이 vertical이면 상/하)의 테두리를 지울 수 있습니다. 조금 디자인적인 요소에요.
+- removeLineNumber="boolean"
+원고지의 줄 번호(줄마다 몇 번째 칸인지 나타내는 번호)를 숨길 수 있습니다.
+   
+물론 코드에서도 위의 내용들을 얼마든지 런타임에 변경해줄 수 있으며, property 이름은 manuscript가 있다면 지우고 lowerCamelCase로 변환하시면 됩니다.   
+예를 들어 manuscriptOrientation은 코드에서 orientation으로 호출할 수 있으며, minimumCellsPerLine은 그대로 minimumCellsPerLine으로 호출할 수 있습니다.   
+이를 통해 값을 변경할 경우 즉시 반영되므로 다른 코드를 호출할 필요는 없습니다.
+   
+### Plus
+디자인 적인 느낌으로 만든 뷰입니다. 실제 원고지나 글자 수를 세려는 목적보다는 강조하고자 하는 문장 혹은 단어를 이 뷰 안에 넣어서 표현하면 좀 괜찮지 않을까 하네요.
+이거 근데 밤 새고 다음날 낮에 만든거라 좀 코드가 지저분할 수 있습니다. 제대로 집중을 못해서...   
+그리고 이거 클래스를 보시는 분이 계실진 모르겠는데 원고지에 그려지는 선도 Line이고 입력받은 텍스트를 최대 칸 수에 맞게 분리해서 한줄한줄 담은 것도 Line이라 변수명을 어찌 구분해야할지 
+꽤 고민했습니다. 영어는 어렵네요...  
 
 ## Conclusion
 패키지에 라이브러리 aar파일이 있을겁니다. 흥미가 가신다면 가져가셔서 써보세요.   
