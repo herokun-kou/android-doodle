@@ -9,8 +9,42 @@ import android.util.Log
 import android.view.View
 import kotlin.math.abs
 
+/**
+ * @author herok
+ *
+ * A Manuscript class extends View.
+ * Creates manuscript view in android layout.
+ * Draw texts with regular size and draw lines like manuscript.
+ *
+ * @property[text] Text which displays in this view.
+ * @property[textSize] Text size of [text].
+ * @property[color] Color of manuscript lines.
+ * @property[textColor] Text color of [text].
+ * @property[minimumCellsPerLine] Minimum count of cells per line set by user.
+ * @property[maximumCellsPerLine] Maximum count of cells per line set by user.
+ * @property[orientation] Orientation of this view. Must be one of [ORIENTATION_HORIZONTAL], [ORIENTATION_VERTICAL_TO_LEFT], [ORIENTATION_VERTICAL_TO_RIGHT].
+ * @property[removeBeginningAndEndOutline] Removes beginning outline and end outline of this view.
+ * @property[removeLineNumber] Removes line number of this view.
+ * @property[linesInParagraph] Holds sentences which split by newline character and max cells per line.
+ * @property[cellSize] Size of cells.
+ * @property[cellPadding] Padding of cells.
+ * @property[marginBetweenLines] Margin of each lines.
+ * @property[maximumCellsInScreenPerLine] Maximum count of cells per line set by code, related with view width(height in [orientation]: Vertical)
+ * @property[textPaint] Paint object of texts.
+ * @property[lineNumberPaint] Paint object of lineNumbers.
+ * @property[linePaint] Paint object of lines.
+ * @property[lineStrokeWidth] Stroke width of lines.
+ * @property[maxMeasuredSize2] Max value of size2. Used to move canvas when [orientation] is [ORIENTATION_VERTICAL_TO_LEFT], to align canvas to right end of view.
+ * @property[fullSize2] Real value of size2. Used to move canvas when [orientation] is [ORIENTATION_VERTICAL_TO_LEFT], to align canvas to right end of view.
+ */
 class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
 
+    /**
+     * @property[TAG] Log tag constant.
+     * @property[ORIENTATION_HORIZONTAL] Orientation constant.
+     * @property[ORIENTATION_VERTICAL_TO_LEFT] Orientation constant.
+     * @property[ORIENTATION_VERTICAL_TO_RIGHT] Orientation constant.
+     */
     companion object {
         const val TAG = "Manuscript"
 
@@ -43,24 +77,24 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
             invalidate()
         }
 
-    var minimumColumnCount = -1
+    var minimumCellsPerLine = -1
         set(value) {
             field = value
-            if((minimumColumnCount != -1 && maximumColumnCount != -1) && (minimumColumnCount > maximumColumnCount)){
+            if((minimumCellsPerLine != -1 && maximumCellsPerLine != -1) && (minimumCellsPerLine > maximumCellsPerLine)){
                 Log.e(TAG, "Passed minimum column count value is bigger than maximum column count.")
                 Log.e(TAG, "Setting maximum column count to minimum column count...")
-                maximumColumnCount = minimumColumnCount
+                maximumCellsPerLine = minimumCellsPerLine
             }
             requestLayout()
         }
 
-    var maximumColumnCount = -1
+    var maximumCellsPerLine = -1
         set(value) {
             field = value
-            if((minimumColumnCount != -1 && maximumColumnCount != -1) && (minimumColumnCount > maximumColumnCount)){
+            if((minimumCellsPerLine != -1 && maximumCellsPerLine != -1) && (minimumCellsPerLine > maximumCellsPerLine)){
                 Log.e(TAG, "Passed maximum column count value is smaller than minimum column count.")
                 Log.e(TAG, "Setting minimum column count to maximum column count...")
-                minimumColumnCount = maximumColumnCount
+                minimumCellsPerLine = maximumCellsPerLine
             }
             requestLayout()
         }
@@ -71,7 +105,7 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
             requestLayout()
         }
 
-    var removeHorizontalOutline = false
+    var removeBeginningAndEndOutline = false
         set(value) {
             field = value
             invalidate()
@@ -83,12 +117,12 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
             invalidate()
         }
 
-    private var sentences: MutableList<String> = ArrayList()
+    private var linesInParagraph: MutableList<String> = ArrayList()
 
-    private var textRectSize = 0
-    private var marginBetweenSentences = 0
-    private var maxColumnCountInScreen = 0
-    private var textPadding = 0
+    private var cellSize = 0
+    private var cellPadding = 0
+    private var marginBetweenLines = 0
+    private var maximumCellsInScreenPerLine = 0
 
     private var textPaint = Paint()
     private var lineNumberPaint = Paint()
@@ -116,9 +150,9 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
                     context.resources.getDimensionPixelSize(R.dimen.default_manuscript_text_size)
                 )
 
-                minimumColumnCount = getInt(R.styleable.Manuscript_minimumColumnCount, -1).coerceAtLeast(-1)
+                minimumCellsPerLine = getInt(R.styleable.Manuscript_minimumCellsPerLine, -1).coerceAtLeast(-1)
 
-                maximumColumnCount = getInt(R.styleable.Manuscript_maximumColumnCount, -1).coerceAtLeast(-1)
+                maximumCellsPerLine = getInt(R.styleable.Manuscript_maximumCellsPerLine, -1).coerceAtLeast(-1)
 
                 orientation = getInt(R.styleable.Manuscript_manuscriptOrientation, 0)
 
@@ -126,36 +160,42 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
 
                 textColor = getColor(R.styleable.Manuscript_manuscriptTextColor, Color.parseColor("#FFFFFF"))
 
-                removeHorizontalOutline = getBoolean(R.styleable.Manuscript_removeHorizontalOutline, false)
+                removeBeginningAndEndOutline = getBoolean(R.styleable.Manuscript_removeBeginningAndEndOutline, false)
 
                 removeLineNumber = getBoolean(R.styleable.Manuscript_removeLineNumber, false)
             }finally {
                 recycle()
             }
         }
-        textPadding = context.resources.getDimensionPixelSize(R.dimen.manuscript_text_padding)
+        cellPadding = context.resources.getDimensionPixelSize(R.dimen.manuscript_text_padding)
         lineStrokeWidth = context.resources.getDimensionPixelSize(R.dimen.manuscript_stroke_width)
     }
 
+    /**
+     * Override function of [onMeasure].
+     * Firstly, measure itself's width(height in vertical orientation) without screen size.
+     * Secondly, measure itself's width(height in vertical orientation) with screen size and value of first step.
+     * Lastly, measure itself's max cell count per line and separate text with measured max cell count.
+     */
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        if((minimumColumnCount != -1 && maximumColumnCount != -1) && (minimumColumnCount > maximumColumnCount)){
+        if((minimumCellsPerLine != -1 && maximumCellsPerLine != -1) && (minimumCellsPerLine > maximumCellsPerLine)){
             throw Exception("minimumColumnCount is bigger than maximumColumnCount!!")
         }
 
         val widthMode = MeasureSpec.getMode(widthMeasureSpec)
         val heightMode = MeasureSpec.getMode(heightMeasureSpec)
 
-        textRectSize = textSize + textPadding
-        marginBetweenSentences = (textSize / 2.5f).toInt()
+        cellSize = textSize + cellPadding
+        marginBetweenLines = (textSize / 2.5f).toInt()
 
-        sentences.clear()
-        sentences = separateText(maximumColumnCount) as MutableList<String>
+        linesInParagraph.clear()
+        linesInParagraph = separateText(maximumCellsPerLine) as MutableList<String>
         var maxLength = 0
-        sentences.forEach{
+        linesInParagraph.forEach{
             if(it.length > maxLength) maxLength = it.length
         }
 
-        val sizeOfItself1 = maxLength.coerceAtLeast(minimumColumnCount) * textRectSize + paddingLeft + paddingRight
+        val sizeOfItself1 = maxLength.coerceAtLeast(minimumCellsPerLine) * cellSize + paddingLeft + paddingRight
         val sizeOfItself2: Int
 
         val measuredWidth: Int
@@ -168,11 +208,11 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
                 else -> sizeOfItself1
             }
 
-            maxColumnCountInScreen = getMaxLetterCountInScreen(sizeOfItself1, measuredWidth)
+            maximumCellsInScreenPerLine = measureMaxCellsInScreenPerLine(sizeOfItself1, measuredWidth)
 
-            sentences = separateText(maxColumnCountInScreen.coerceAtLeast(minimumColumnCount)) as MutableList<String>
+            linesInParagraph = separateText(maximumCellsInScreenPerLine.coerceAtLeast(minimumCellsPerLine)) as MutableList<String>
 
-            sizeOfItself2 = sentences.size * (textRectSize + marginBetweenSentences) + marginBetweenSentences + paddingTop + paddingBottom
+            sizeOfItself2 = linesInParagraph.size * (cellSize + marginBetweenLines) + marginBetweenLines + paddingTop + paddingBottom
 
             maxMeasuredSize2 = MeasureSpec.getSize(heightMeasureSpec)
             fullSize2 = sizeOfItself2
@@ -189,11 +229,11 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
                 else -> sizeOfItself1
             }
 
-            maxColumnCountInScreen = getMaxLetterCountInScreen(sizeOfItself1, measuredHeight)
+            maximumCellsInScreenPerLine = measureMaxCellsInScreenPerLine(sizeOfItself1, measuredHeight)
 
-            sentences = separateText(maxColumnCountInScreen.coerceAtLeast(minimumColumnCount)) as MutableList<String>
+            linesInParagraph = separateText(maximumCellsInScreenPerLine.coerceAtLeast(minimumCellsPerLine)) as MutableList<String>
 
-            sizeOfItself2 = sentences.size * (textRectSize + marginBetweenSentences) + marginBetweenSentences + paddingTop + paddingBottom
+            sizeOfItself2 = linesInParagraph.size * (cellSize + marginBetweenLines) + marginBetweenLines + paddingTop + paddingBottom
 
             maxMeasuredSize2 = MeasureSpec.getSize(widthMeasureSpec)
             fullSize2 = sizeOfItself2
@@ -208,6 +248,10 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
         setMeasuredDimension(measuredWidth, measuredHeight)
     }
 
+    /**
+     * Override function [onDraw]
+     * Draws text and lines.
+     */
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
 
@@ -221,44 +265,53 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
 
         lineNumberPaint.color = color
         lineNumberPaint.textAlign = Paint.Align.LEFT
-        lineNumberPaint.textSize = marginBetweenSentences.coerceAtMost(context.resources.getDimensionPixelSize(R.dimen.max_line_number_text_size)).toFloat() - 5
+        lineNumberPaint.textSize = marginBetweenLines.coerceAtMost(context.resources.getDimensionPixelSize(R.dimen.max_line_number_text_size)).toFloat() - 5
 
-        val maxTextLengthInRow = maxColumnCountInScreen.coerceAtLeast(minimumColumnCount)
+        val maxTextLengthInRow = maximumCellsInScreenPerLine.coerceAtLeast(minimumCellsPerLine)
 
         canvas?.save()
         if(orientation == ORIENTATION_VERTICAL_TO_LEFT && fullSize2 - maxMeasuredSize2 > 0){
             canvas?.translate(-(fullSize2 - maxMeasuredSize2).toFloat(), 0f)
         }
 
-        for(sentenceIndex in 0 until sentences.size){
-            val sentence = sentences[sentenceIndex]
+        for(sentenceIndex in 0 until linesInParagraph.size){
+            val sentence = linesInParagraph[sentenceIndex]
             for(letterIndex in 0 until maxTextLengthInRow){
                 if(letterIndex < sentence.length) {
-                    drawText(canvas, sentence, letterIndex, sentenceIndex)
+                    drawText(canvas, sentence[letterIndex], letterIndex, sentenceIndex)
                 }
                 if(letterIndex != 0)
                     drawLetterLine(canvas, letterIndex, sentenceIndex)
             }
             if(!removeLineNumber)
                 drawLineNumber(canvas, sentenceIndex, maxTextLengthInRow)
-            drawSentenceLine(canvas, sentenceIndex, maxTextLengthInRow)
+            drawLineBetweenLinesInParagraph(canvas, sentenceIndex, maxTextLengthInRow)
         }
-        drawOuterLines(canvas, maxTextLengthInRow)
+        drawOutlines(canvas, maxTextLengthInRow)
 
         canvas?.restore()
     }
 
-    private fun getMaxLetterCountInScreen(size1: Int, measuredSize: Int): Int{
+    /**
+     * Measures max cell counts in screen per line.
+     * @param[size1] Size of real line's size.
+     * @param[measuredSize] Size of max line's size.
+     */
+    private fun measureMaxCellsInScreenPerLine(size1: Int, measuredSize: Int): Int{
         var newSize1 = size1
         while(newSize1 > measuredSize){
-            newSize1 -= textRectSize
+            newSize1 -= cellSize
         }
         val padding = paddingTop + paddingBottom
-        return (newSize1 - padding) / textRectSize
+        return (newSize1 - padding) / cellSize
     }
 
+    /**
+     * Separates text with given length and newline character.
+     * @param[maxLength] Max length of separated sentences.
+     */
     private fun separateText(maxLength: Int): List<String>{
-        sentences.clear()
+        linesInParagraph.clear()
         val newLinedSentences = text.split("\n")
         if(maxLength > 0){
             newLinedSentences.forEach {
@@ -266,18 +319,25 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
                 for (index in it.indices) {
                     eachLine += it[index]
                     if((index+1) % maxLength == 0 || index == it.length - 1){
-                        sentences.add(eachLine)
+                        linesInParagraph.add(eachLine)
                         eachLine = ""
                     }
                 }
             }
         }else{
-            sentences.addAll(newLinedSentences)
+            linesInParagraph.addAll(newLinedSentences)
         }
-        return sentences
+        return linesInParagraph
     }
 
-    private fun drawText(canvas: Canvas?, sentence: String, letterIndex: Int, sentenceIndex: Int){
+    /**
+     * Draws texts in canvas.
+     * @param[canvas] Target canvas to draw.
+     * @param[letter] Target letter to draw.
+     * @param[letterIndex] Index of letter, used to position this letter.
+     * @param[lineIndexInParagraph] [linesInParagraph]'s index which contains [letter], used to position [letter]
+     */
+    private fun drawText(canvas: Canvas?, letter: Char, letterIndex: Int, lineIndexInParagraph: Int){
         val textHeight = abs(textPaint.ascent()) + textPaint.descent()
         val diff = abs(textPaint.ascent()) - textHeight/2f
 
@@ -286,75 +346,87 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
         when(orientation){
             ORIENTATION_HORIZONTAL -> {
                 x = paddingLeft +
-                        (textRectSize * letterIndex + textRectSize / 2f)
+                        (cellSize * letterIndex + cellSize / 2f)
                 y = paddingTop +
-                        ((marginBetweenSentences + textRectSize) * (sentenceIndex + 1) + diff - textHeight/2f - (textRectSize  - textHeight)/2f)
+                        ((marginBetweenLines + cellSize) * (lineIndexInParagraph + 1) + diff - textHeight/2f - (cellSize  - textHeight)/2f)
             }
             ORIENTATION_VERTICAL_TO_LEFT -> {
-                x = (canvas?.width ?: measuredWidth) - (paddingRight + textRectSize/2f + (marginBetweenSentences) * (sentenceIndex + 1) + sentenceIndex * textRectSize)
-                y = paddingTop + ((letterIndex + 1) * textRectSize) + diff - textHeight/2f - (textRectSize  - textHeight)/2f
+                x = (canvas?.width ?: measuredWidth) - (paddingRight + cellSize/2f + (marginBetweenLines) * (lineIndexInParagraph + 1) + lineIndexInParagraph * cellSize)
+                y = paddingTop + ((letterIndex + 1) * cellSize) + diff - textHeight/2f - (cellSize  - textHeight)/2f
             }
             ORIENTATION_VERTICAL_TO_RIGHT -> {
-                x = paddingLeft + textRectSize/2f + (marginBetweenSentences) * (sentenceIndex + 1) + textRectSize * sentenceIndex
-                y = paddingTop + ((letterIndex + 1) * textRectSize) + diff - textHeight/2f - (textRectSize  - textHeight)/2f
+                x = paddingLeft + cellSize/2f + (marginBetweenLines) * (lineIndexInParagraph + 1) + cellSize * lineIndexInParagraph
+                y = paddingTop + ((letterIndex + 1) * cellSize) + diff - textHeight/2f - (cellSize  - textHeight)/2f
             }
         }
-        if(sentence[letterIndex] == '.' || sentence[letterIndex] == ',') {
-            val offset = if(orientation == 0 || orientation == -1) -textRectSize/2f + 30 else textRectSize/2f - 30
-            canvas?.drawText(sentence[letterIndex].toString(), x + offset, y + 15, textPaint)
+        if(letter == '.' || letter == ',') {
+            val offset = if(orientation == 0 || orientation == -1) -cellSize/2f + 30 else cellSize/2f - 30
+            canvas?.drawText(letter.toString(), x + offset, y + 15, textPaint)
         }else{
-            canvas?.drawText(sentence[letterIndex].toString(), x, y, textPaint)
+            canvas?.drawText(letter.toString(), x, y, textPaint)
         }
     }
 
-    private fun drawLetterLine(canvas: Canvas?, letterIndex: Int, sentenceIndex: Int){
+    /**
+     * Draws divider between letter and letter in line.
+     * @param[canvas] Target canvas to draw.
+     * @param[letterIndex] Index of letter, used to position this line
+     * @param[lineIndexInParagraph] [linesInParagraph]'s index, used to position this line.
+     */
+    private fun drawLetterLine(canvas: Canvas?, letterIndex: Int, lineIndexInParagraph: Int){
         when(orientation) {
             ORIENTATION_HORIZONTAL -> {
-                val x = paddingLeft + (letterIndex * textRectSize).toFloat()
+                val x = paddingLeft + (letterIndex * cellSize).toFloat()
                 val yStart =
-                    paddingTop + ((sentenceIndex + 1) * marginBetweenSentences + sentenceIndex * textRectSize).toFloat()
+                    paddingTop + ((lineIndexInParagraph + 1) * marginBetweenLines + lineIndexInParagraph * cellSize).toFloat()
                 val yStop =
-                    paddingTop + ((sentenceIndex + 1) * marginBetweenSentences + (sentenceIndex + 1) * textRectSize).toFloat()
+                    paddingTop + ((lineIndexInParagraph + 1) * marginBetweenLines + (lineIndexInParagraph + 1) * cellSize).toFloat()
 
                 canvas?.drawLine(x, yStart, x, yStop, linePaint)
             }
             ORIENTATION_VERTICAL_TO_LEFT -> {
                 val xStart = (canvas?.width ?: measuredWidth) -
-                        (paddingRight + ((sentenceIndex + 1) * marginBetweenSentences + sentenceIndex * textRectSize)).toFloat()
+                        (paddingRight + ((lineIndexInParagraph + 1) * marginBetweenLines + lineIndexInParagraph * cellSize)).toFloat()
                 val xStop = (canvas?.width ?: measuredWidth) -
-                        (paddingRight + ((sentenceIndex + 1) * marginBetweenSentences + (sentenceIndex + 1) * textRectSize)).toFloat()
-                val y = paddingTop + (letterIndex * textRectSize).toFloat()
+                        (paddingRight + ((lineIndexInParagraph + 1) * marginBetweenLines + (lineIndexInParagraph + 1) * cellSize)).toFloat()
+                val y = paddingTop + (letterIndex * cellSize).toFloat()
 
                 canvas?.drawLine(xStart, y, xStop, y, linePaint)
             }
             ORIENTATION_VERTICAL_TO_RIGHT -> {
                 val xStart =
-                    paddingLeft + ((sentenceIndex + 1) * marginBetweenSentences + sentenceIndex * textRectSize).toFloat()
+                    paddingLeft + ((lineIndexInParagraph + 1) * marginBetweenLines + lineIndexInParagraph * cellSize).toFloat()
                 val xStop =
-                    paddingLeft + ((sentenceIndex + 1) * marginBetweenSentences + (sentenceIndex + 1) * textRectSize).toFloat()
-                val y = paddingTop + (letterIndex * textRectSize).toFloat()
+                    paddingLeft + ((lineIndexInParagraph + 1) * marginBetweenLines + (lineIndexInParagraph + 1) * cellSize).toFloat()
+                val y = paddingTop + (letterIndex * cellSize).toFloat()
 
                 canvas?.drawLine(xStart, y, xStop, y, linePaint)
             }
         }
     }
 
-    private fun drawLineNumber(canvas: Canvas?, sentenceIndex: Int, maxTextLengthInRow: Int){
+    /**
+     * Draws line number in line margin.
+     * @param[canvas] Target canvas to draw.
+     * @param[lineIndexInParagraph] [linesInParagraph]'s index.
+     * @param[maxCellsPerLineInParagraph] Max cells per line in paragraph, used to calculate current line in paragraph's cell count.
+     */
+    private fun drawLineNumber(canvas: Canvas?, lineIndexInParagraph: Int, maxCellsPerLineInParagraph: Int){
         var x = 0f; var y = 0f
         val horizontalTransition = 7.5f
         when(orientation){
             ORIENTATION_HORIZONTAL -> {
                 x = paddingLeft + horizontalTransition
-                y = paddingTop + ((sentenceIndex + 1) * marginBetweenSentences + sentenceIndex * textRectSize).toFloat() - lineNumberPaint.descent() -1.2f
+                y = paddingTop + ((lineIndexInParagraph + 1) * marginBetweenLines + lineIndexInParagraph * cellSize).toFloat() - lineNumberPaint.descent() -1.2f
             }
             ORIENTATION_VERTICAL_TO_LEFT -> {
                 x = (canvas?.width ?: width) -
-                        (paddingRight + ((sentenceIndex + 1) * marginBetweenSentences + sentenceIndex * textRectSize).toFloat()) + lineNumberPaint.descent()
+                        (paddingRight + ((lineIndexInParagraph + 1) * marginBetweenLines + lineIndexInParagraph * cellSize).toFloat()) + lineNumberPaint.descent()
                 y = paddingTop + horizontalTransition
             }
             ORIENTATION_VERTICAL_TO_RIGHT -> {
                 lineNumberPaint.textAlign = Paint.Align.RIGHT
-                x = (paddingLeft + ((sentenceIndex + 1) * marginBetweenSentences + sentenceIndex * textRectSize).toFloat()) - lineNumberPaint.descent()
+                x = (paddingLeft + ((lineIndexInParagraph + 1) * marginBetweenLines + lineIndexInParagraph * cellSize).toFloat()) - lineNumberPaint.descent()
                 y = paddingTop + horizontalTransition
             }
         }
@@ -363,36 +435,42 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
             canvas?.rotate(90f, x, y)
         else if(orientation == -1)
             canvas?.rotate(-90f, x, y)
-        canvas?.drawText("${maxTextLengthInRow * sentenceIndex + 1}", x, y, lineNumberPaint)
+        canvas?.drawText("${maxCellsPerLineInParagraph * lineIndexInParagraph + 1}", x, y, lineNumberPaint)
         canvas?.restore()
         lineNumberPaint.textAlign = Paint.Align.LEFT
     }
 
-    private fun drawSentenceLine(canvas: Canvas?, sentenceIndex: Int, maxTextLengthInRow: Int){
+    /**
+     * Draws lines between linesInParagraphs.
+     * @param[canvas] Target canvas to draw.
+     * @param[lineIndexInParagraph] [linesInParagraph]'s index, to position this line.
+     * @param[maxCellsPerLineInParagraph] Max cells per line in paragraph, used to draw this line.
+     */
+    private fun drawLineBetweenLinesInParagraph(canvas: Canvas?, lineIndexInParagraph: Int, maxCellsPerLineInParagraph: Int){
         when(orientation){
             ORIENTATION_HORIZONTAL -> {
                 val startX = paddingLeft.toFloat()
-                val stopX = paddingLeft + (maxTextLengthInRow * textRectSize).toFloat()
-                val topStartStopY = paddingTop + ((sentenceIndex + 1) * marginBetweenSentences + sentenceIndex * textRectSize).toFloat()
-                val bottomStartStopY = paddingTop + ((sentenceIndex + 1) * marginBetweenSentences + (sentenceIndex + 1) * textRectSize).toFloat()
+                val stopX = paddingLeft + (maxCellsPerLineInParagraph * cellSize).toFloat()
+                val topStartStopY = paddingTop + ((lineIndexInParagraph + 1) * marginBetweenLines + lineIndexInParagraph * cellSize).toFloat()
+                val bottomStartStopY = paddingTop + ((lineIndexInParagraph + 1) * marginBetweenLines + (lineIndexInParagraph + 1) * cellSize).toFloat()
 
                 canvas?.drawLine(startX, topStartStopY, stopX, topStartStopY, linePaint)
                 canvas?.drawLine(startX, bottomStartStopY, stopX, bottomStartStopY, linePaint)
             }
             ORIENTATION_VERTICAL_TO_LEFT -> {
-                val rightStartStopX = (canvas?.width ?: measuredWidth) - paddingRight - ((sentenceIndex + 1) * marginBetweenSentences + sentenceIndex * textRectSize).toFloat()
-                val leftStartStopX = (canvas?.width ?: measuredWidth) - paddingRight - ((sentenceIndex + 1) * marginBetweenSentences + (sentenceIndex + 1) * textRectSize).toFloat()
+                val rightStartStopX = (canvas?.width ?: measuredWidth) - paddingRight - ((lineIndexInParagraph + 1) * marginBetweenLines + lineIndexInParagraph * cellSize).toFloat()
+                val leftStartStopX = (canvas?.width ?: measuredWidth) - paddingRight - ((lineIndexInParagraph + 1) * marginBetweenLines + (lineIndexInParagraph + 1) * cellSize).toFloat()
                 val startY = paddingTop.toFloat()
-                val stopY = paddingTop + (maxTextLengthInRow * textRectSize).toFloat()
+                val stopY = paddingTop + (maxCellsPerLineInParagraph * cellSize).toFloat()
 
                 canvas?.drawLine(rightStartStopX, startY, rightStartStopX, stopY, linePaint)
                 canvas?.drawLine(leftStartStopX, startY, leftStartStopX, stopY, linePaint)
             }
             ORIENTATION_VERTICAL_TO_RIGHT -> {
-                val leftStartStopX = paddingLeft + ((sentenceIndex + 1) * marginBetweenSentences + sentenceIndex * textRectSize).toFloat()
-                val rightStartStopX = paddingLeft + ((sentenceIndex + 1) * marginBetweenSentences + (sentenceIndex + 1) * textRectSize).toFloat()
+                val leftStartStopX = paddingLeft + ((lineIndexInParagraph + 1) * marginBetweenLines + lineIndexInParagraph * cellSize).toFloat()
+                val rightStartStopX = paddingLeft + ((lineIndexInParagraph + 1) * marginBetweenLines + (lineIndexInParagraph + 1) * cellSize).toFloat()
                 val startY = paddingTop.toFloat()
-                val stopY = paddingTop + (maxTextLengthInRow * textRectSize).toFloat()
+                val stopY = paddingTop + (maxCellsPerLineInParagraph * cellSize).toFloat()
 
                 canvas?.drawLine(rightStartStopX, startY, rightStartStopX, stopY, linePaint)
                 canvas?.drawLine(leftStartStopX, startY, leftStartStopX, stopY, linePaint)
@@ -400,24 +478,29 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
         }
     }
 
-    private fun drawOuterLines(canvas: Canvas?, maxTextLengthInRow: Int){
+    /**
+     * Draws outlines of this view.
+     * @param[canvas] Target canvas to draw.
+     * @param[maxCellsPerLineInParagraph] Max cells per line in paragraph, used to draw outline.
+     */
+    private fun drawOutlines(canvas: Canvas?, maxCellsPerLineInParagraph: Int){
         var x1 = 0f; var y1 = 0f; var x2 = 0f; var y2 = 0f
         when(orientation){
             ORIENTATION_HORIZONTAL -> {
                 x1 = paddingLeft.toFloat()
                 y1 = paddingTop.toFloat()
-                x2 = paddingLeft + (textRectSize * maxTextLengthInRow).toFloat()
-                y2 = paddingTop + ((sentences.size + 1) * marginBetweenSentences + sentences.size * textRectSize).toFloat()
+                x2 = paddingLeft + (cellSize * maxCellsPerLineInParagraph).toFloat()
+                y2 = paddingTop + ((linesInParagraph.size + 1) * marginBetweenLines + linesInParagraph.size * cellSize).toFloat()
             }
             ORIENTATION_VERTICAL_TO_LEFT, ORIENTATION_VERTICAL_TO_RIGHT -> {
                 x1 = paddingLeft.toFloat()
                 y1 = paddingTop.toFloat()
-                x2 = paddingLeft + ((sentences.size + 1) * marginBetweenSentences + sentences.size * textRectSize).toFloat()
-                y2 = paddingTop + (textRectSize * maxTextLengthInRow).toFloat()
+                x2 = paddingLeft + ((linesInParagraph.size + 1) * marginBetweenLines + linesInParagraph.size * cellSize).toFloat()
+                y2 = paddingTop + (cellSize * maxCellsPerLineInParagraph).toFloat()
             }
         }
 
-        if(!removeHorizontalOutline) {
+        if(!removeBeginningAndEndOutline) {
             canvas?.drawLine(x1, y1, x1, y2, linePaint)
             canvas?.drawLine(x2, y1, x2, y2, linePaint)
             canvas?.drawLine(x1, y1, x2, y1, linePaint)
