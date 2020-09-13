@@ -248,11 +248,11 @@ Helper 인터페이스는 다음 세 추상 함수를 가지며 각각 다음과
 - getInternalNodeName(depth: Int, leafNodePosition: Int): String   
 데이터 리스트의 leafNodePosition 위치의 아이템의 부모 노드 중 depth 깊이에 있는 노드의 이름을 반환해야합니다. 이는 이전 아이템과 다음 아이템이 서로 다른 그룹에 있는지 구별하기 위함입니다.
    
-- getDecorationViewWidth(depth: Int, leafNodePosition: Int): Int
+- getDecorationViewWidth(depth: Int, leafNodePosition: Int): Int   
 데이터 리스트의 leafNodePosition 위치의 아이템의 부모 노드 중 depth 깊이에 있는 노드가 가지는 Decoration View의 너비를 반환해야합니다. 같은 깊이라도 leafNodePosition에 따라 다른 너비를 반환하는게 가능합니다.   
 높이를 구하는 함수가 없는 이유는 높이의 경우 해당 Decoration View를 가지는 아이템의 View 높이에 의해 자동으로 결정되기 때문입니다.
    
-- setUpDecoration(depth: Int, leafNodePosition: Int, decoView: TreeItemDecoration.Decoration)
+- setUpDecoration(depth: Int, leafNodePosition: Int, decoView: TreeItemDecoration.Decoration)   
 이 함수에서 뷰가 그려지기 직전에 뷰에 해야할 일을 정합니다. 이 때 세 번째 인수로 전달되는 Decoration 객체는 View를 가지고 있는 객체로, decoView.root.someView와 같이 호출할 수 있습니다.   
 예를 들면 이 함수에서 Decoration View에 포함된 TextView의 text나 ImageView의 image 등을 정할 수 있습니다.
    
@@ -349,9 +349,12 @@ mainRecycler.addItemDecoration(decoration)
 ```
 TreeItemDecoration의 생성자는 다음과 같습니다.
 - TreeItemDecoration(maxDepth: Int, decorationsByDepth: Array<Decoration>, helper: Helper)
-    - maxDepth: 이 트리 형태가 가지는 최대 깊이로, 모든 leaf node들은 이 깊이에 있어야 합니다.. 루트노드 > 그룹 1-1 > 그룹 1-1-1 > 리프노드 와 같은 구조일 경우 이 값은 3이 됩니다.
-    - decorationByDepth: 깊이에 따른 Decoration View로, 반드시 배열 형태로 전달되어야 하며 최대 깊이가 1이더라도 arrayOf를 사용해 배열로 바꿔 전달해야합니다.
-    - helper: Helper 인터페이스로 Adapter에서 implement했으니 Adapter를 넘겨주면 됩니다.
+    - maxDepth   
+    이 트리 형태가 가지는 최대 깊이로, 모든 leaf node들은 이 깊이에 있어야 합니다.. 루트노드 > 그룹 1-1 > 그룹 1-1-1 > 리프노드 와 같은 구조일 경우 이 값은 3이 됩니다.
+    - decorationByDepth   
+    깊이에 따른 Decoration View로, 반드시 배열 형태로 전달되어야 하며 최대 깊이가 1이더라도 arrayOf를 사용해 배열로 바꿔 전달해야합니다.
+    - helper   
+    Helper 인터페이스로 Adapter에서 implement했으니 Adapter를 넘겨주면 됩니다.
    
 끝났습니다! 추가로 다른 Decoration과 혼합하여 사용할 수 있으니 Offset이나 다른 Decoration을 만들어도 됩니다.
 
