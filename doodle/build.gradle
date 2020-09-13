@@ -67,7 +67,7 @@ afterEvaluate {
         repositories {
             maven {
                 name = "GitHubPackages"
-                url = "https://maven.pkg.github.com/herokun-kou/android-doodle"
+                url = "https://maven.pkg.github.com/herokun-kou/doodle-android"
                 credentials {
                     username = githubProperties['gpr.user'] ?: System.getenv("GPR_USER")
                     password = githubProperties['gpr.key'] ?: System.getenv("GPR_API_KEY")
