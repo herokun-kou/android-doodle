@@ -1,14 +1,14 @@
 # doodle-android
 안드로이드 낙서 라이브러리입니다. 그냥 심심풀이 낙서에요.   
-지금은 클래스 셋 뿐입니다. 그에 대한 내용은 아래에 있어요.   
+지금은 클래스 몇 개 뿐입니다. 그에 대한 내용은 아래에 있어요.   
 물론 스샷같은건 아직 없어서~~올리기 귀찮아서~~ 궁금하시면 직접 import하고 사용해보세요! (약팔이)
 
 ## Contents
 * 본문은 추가된 순서대로, 목차는 ABC순으로 정렬되어있습니다.
 - [Installation](#Installation): 간단한 설치 방법
-- [AnimatedMenu](#AnimatedMenu): 애니메이션이 있는 FrameLayout을 확장한 팝업 메뉴.
-- [Manuscript](#Manuscript): 원고지 뷰.
-- [ShootingStar](#ShootingStar): 안드로이드 화면에 내리는 FrameLayout을 확장한 별똥별 뷰.
+- [AnimatedMenu](#AnimatedMenu): FrameLayout을 확장한 애니메이션이 있는 팝업 메뉴.
+- [Manuscript](#Manuscript): View를 확장한 원고지를 그리는 클래스.
+- [ShootingStar](#ShootingStar): FrameLayout을 확장한 별똥별 뷰.
 - [TreeItemDecoration](#TreeItemDecoration): RecyclerView 용 ItemDecoration을 확장한 클래스.
 - [Conclusion](#Conclusion)
 
@@ -26,18 +26,8 @@ implementation project: 'final-1.2.0'
 끝났습니다! 이제 제가 한 몇 가지 낙서를 여러분도 쓸 수 있게 되었습니다.
    
 ## AnimatedMenu
-동적 애니메이션이 있는 메뉴를 만듭니다.
+In/Out 애니메이션이 있는 메뉴를 만듭니다.
 FrameLayout을 확장하여 화면 전체를 차지했을 때 최적의 퍼포먼스를 발휘하도록 설계되었습니다.   
-ConstraintLayout 등을 사용하여 메인 뷰 위에 겹쳐서 전체 화면을 차지하도록 추가하면 완벽합니다.   
-show()함수를 호출하면 레이아웃이 차지하는 영역이 어두워(혹은 밝아)지며 화면 중앙에 메뉴 아이템들이 순차적으로 동적 애니메이션과 함께 표시됩니다.   
-decoration, header, footer 기능이 있습니다. decoration은 화면이 어두워질 때 같이 페이드되어 나타나는 뷰로, AnimatedMenu 안에 하나의 뷰만 있어야 하지만
-ViewGroup도 뷰이기 때문에 여러 뷰를 넣고 싶다면 ViewGroup을 확장한 레이아웃을 추가하고 그 안에 여러 뷰를 넣으면 됩니다.   
-header와 footer는 메뉴 아이템들의 가장 위와 가장 아래에 표시되며, 메뉴 아이템들이 animate될 때 같이 animate됩니다.
-세 기능 모두 독립적으로 사용할 수 있으며, 사용하지 않을 경우 별다른 설정 없이 그냥 비워두면 됩니다.
-사용할 경우 xml attribute를 통해 설정해주세요. 자세한 내용은 아래에 있습니다.
-메뉴 아이템들은 그룹을 통해 표시되며, 최소 한 개의 그룹을 가져야합니다. 그룹 안에 화면에 들어가는 한 얼마든지 메뉴 아이템을 추가할 수 있습니다.   
-그룹 배열과 그룹 아이템 배열을 지정해주면 되며, 그룹 아이템은 2차원 배열로 length(size)가 그룹 배열과 그룹 아이템 배열이 같아야합니다.   
-나머지 내용은 아래의 코드를 살펴보면서 이해해주세요. 
    
 ### Usage
 #### XML
@@ -51,7 +41,7 @@ header와 footer는 메뉴 아이템들의 가장 위와 가장 아래에 표시
     app:useFooter="true">
 
     <!-- First child : Decoration view -->
-    <!-- This view is decoration of Menu, it will just fade in/out when menu is show/hides. -->
+    <!-- This view is decoration of Menu, it will just fade in/out when menu show/hides. -->
     <!-- Remove this if you don't want to use decoration and set useDecoration value to false. -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -98,11 +88,17 @@ header와 footer는 메뉴 아이템들의 가장 위와 가장 아래에 표시
 
 </com.herok.doodle.AnimatedMenu>
 ```
-주석을 읽어보시면 대강 사용법이 감이 오실거라 생각합니다.
+자세한 내용은 주석으로 표시되어있습니다.   
+기본적으로 AnimatedMenu 태그 안에 아무런 다른 태그가 없어도 사용할 수 있습니다.   
+Decoration과 Header, Footer 중 하나만 추가할 수도 있으며 그 경우 useDecoration이나 useHeader, useFooter 속성을 명시해주면 됩니다.   
+    
 #### Kotlin
-뷰의 초기화는 아래와 같이 합니다. 먼저 AnimatedMenu를 가져온 후(ViewBinding으로도 가능합니다) 그룹, 아이템 배열을 만들어서 AnimatedMenu에 setGroupsAndItems를 호출해 설정합니다.   
+뷰의 초기화는 아래와 같이 합니다. 먼저 AnimatedMenu를 가져온 후 그룹, 아이템 배열을 만들어서 AnimatedMenu에 setGroupsAndItems를 호출해 설정합니다.   
+아이템은 반드시 그룹으로 묶여있어야 하기 때문에 1차원 배열 한 개와 2차원 배열 한 개를 준비해야합니다.   
+   
 각 아이템의 클릭 액션은 아래의 setItemClickListener(groupPosition, itemPosition, listener)을 호출해 설정합니다. 이 때 주의하실 점은, 아무 조건 없이 onClickListener 람다식을 채울 경우
 여러번 마구 누르면 리스너 액션이 두 번 이상 동작할 수 있다는 점입니다. 한 번만 동작하게 하려면 animating property와 hide() 함수를 사용해주시면 됩니다.   
+   
 ```kotlin
 val animatedMenu: AnimatedMenu = findViewById(R.id.animated_menu)
 val animatedMenuGroups = arrayOf("그룹 1", "그룹 2")
@@ -126,8 +122,8 @@ animatedMenu.hide()
 ```
    
 그룹이나 아이템을 아래와 같이 동적으로 추가하거나 제거할 수도 있습니다. 추가/삭제 애니메이션이 필요하다면 animate인자에 true를 전달하시면 됩니다.
-그룹을 삭제할 경우 포함된 모든 아이템이 제거되니 주의해야 합니다.
-단, 추가/삭제 애니메이션이 진행될 동안은 다른 작업(show, hide, add, remove 등)을 수행할 수 없으니 여러 메뉴를 추가하려 한다면 animate인자를 생략하거나 false로 지정해주세요.
+단, 추가/삭제 애니메이션이 진행될 동안은 다른 작업(show, hide, add, remove 등)을 수행할 수 없으니 여러 메뉴를 추가하려 한다면 animate인자를 생략하거나 false로 지정해주세요.   
+이 때 그룹을 삭제할 경우 해당 그룹에 포함된 모든 아이템이 제거되니 주의해야 합니다.
 ```kotlin
 animatedMenu.addGroup(0, "그룹 0", false)    //애니메이션 없이 가장 위에 '그룹 0'을 추가
 animatedMenu.addItem(0, 0, "아이템", false){ //애니메이션 없이 첫 번째 그룹에 아이템을 추가
@@ -138,7 +134,7 @@ animatedMenu.removeGroup(0, true)           //애니메이션과 함께 첫 번�
 ```
    
 header와 footer도 동적으로 추가하거나 제거할 수 있습니다.   
-단, 이미 header 혹은 footer가 추가된 상태에서 add를 호출하거나 header와 footer가 없는 상태에서 remove를 호출하면 무시되니 주의해야 합니다.
+이미 header 혹은 footer가 추가된 상태에서 add를 호출하거나 header와 footer가 없는 상태에서 remove를 호출하면 무시됩니다.
 ```kotlin
 animatedMenu.addHeader(headerView)
 animatedMenu.addFooter(footerView)
@@ -160,17 +156,14 @@ AnimatedMenu는 다음 상황에서 Exception을 발생시킵니다:
 - Xml 속성 useDecoration 속성이 true이지만 AnimatedMenu의 자식 뷰의 수가 0개일 때
 - Xml 속성 useDecoration 속성이 false인데 AnimatedMenu의 자식 뷰의 수가 2개 이상일 때
 - Xml 속성 useHeader가 true인데 header view를 찾을 수 없을 때
-- Xml 속성 useFooter가 true인데 footer view를 찾을 수 없을 때
+- Xml 속성 useFooter가 true인데 footer view를 찾을 수 없을 때   
+   
 물론 이외에도 당연히 Exception은 발생할 수 있으나 대표적인 몇 가지를 나열했습니다.
    
    
 ## ShootingStar
 별똥별 클래스입니다. 화면에 배치하면 해당 뷰가 차지하는 크기 안에서 별똥별이 마구 떨어집니다.   
 퀄리티가 좋은 편은 아니고, 그냥 직선이 대각선으로 움직이는게 다입니다. 이것도 궁금하시다면 가져가서 써보세요.   
-예전에 웹용 자바스크립트로 짠 코드 재활용해서 안드로이드 버전으로 바꿔보았는데 글쎄요...잘 되었는지는 모르겠네요.
-무엇보다 안드로이드는 뷰의 배치나, 뷰 하나가 차지하는 메모리가 무겁다보니 웹처럼 마구 별들을 추가하거나 하지는 못할 것 같습니다.
-Xml에서 속성으로 정의된 별의 수 만큼 Star View가 추가되며, 각 Star는 떨어진 후에 위치 재조정과 딜레이를 거쳐 다시 떨어지게 됩니다.
-별이 떨어질 때마다 새로 객체를 만들기엔 낭비일 것 같아서, 정해진 수의 별을 추가하고 그 별들을 재활용하도록 짰습니다.
    
 ### Usage
 #### Xml
@@ -229,27 +222,23 @@ minStarDelay나 maxStarDelay를 조정하는 것을 더 추천합니다.
 코드에서는 starCount를 제외한 모든 xml 속성을 같은 이름으로 설정해줄 수 있으며, 설정하면 즉시 반영되므로 별다른 함수를 호출할 필요는 없습니다.
    
 ### Plus
-별 너무 많이 추가하면 처음에는 멋진데 보면볼수록 이상해보이므로 그냥 진짜 별똥별처럼 한두개만 추가하는 것을 권장합니다.   
+별을 너무 많이 추가하면 처음에는 멋진데 보면볼수록 이상해보이므로 그냥 진짜 별똥별처럼 한두개만 추가하는 것을 권장합니다.   
 나름 자원낭비 없이 만드려고 노력하긴 했지만 실패한 부분도 좀 있어서 실제로 쓰기엔 좀 부족할 수 있습니다...
    
 ## TreeItemDecoration
-리스트 아이템의 왼쪽에 뷰를 그리는 클래스입니다. 1차원 리스트 아이템들이 그룹으로 분류되어 있으며 그 형태가 모든 리프노드가 같은 깊이를 가지는 트리일 때 유용합니다.   
-아이템의 왼쪽에 그리기 때문에 RecyclerView의 ViewHolder에 들어가는 뷰는 좌측 마진을 가져야 자연스럽게 표시되는 경우가 많으며, 같은 부모노드를 가지는 자식이 많을 경우 공간이 조금 낭비되는 경향이 있습니다.   
-중요한 점은 이 클래스를 사용하려면 RecyclerView.Adapter에 들어가는 데이터들이 트리형태로 정렬되어있어야 한다는 점입니다.   
-정렬된 데이터를 Adapter에 붙혔을 경우 같은 그룹 내의 가장 첫 리스트 아이템의 왼쪽에 헤더 뷰를 그리며, 그 아이템이 스크롤에 의해 화면 밖으로 나갈 경우 헤더 뷰는 RecyclerView의 최상위에 붙어서 사라지지 않고 있다가
-다음 그룹의 헤더 뷰가 올라올 때 밀려 올라가며 화면에서 사라집니다.   
-구글의 캘린더 앱을 보시면 있는 좌측의 날짜를 표시하는 뷰와 비슷하게 동작하지만 이 클래스는 깊이 라는 개념을 도입하여 그룹 안에 또다른 그룹이 있을 때 사용할 수 있습니다.   
-단, 이 클래스는 같은 깊이의 Decoration View일 경우 그 형태가 같아야한다는 제약이 있습니다. 물론 View의 visibility를 사용해 스위칭해줄 수는 있지만 리소스의 낭비가 될 가능성이 높아 추천하지 않습니다.      
-물론 트리의 최대 깊이가 1이더라도 사용할 수 있으므로 필요하다면 가져가서 써보세요.
+리스트 아이템의 왼쪽에 끈끈한(sticky) 헤더 뷰를 그리는 클래스입니다.    
+1차원 리스트 아이템들이 정렬되고 그룹으로 분류되어 있으며 그 형태가 모든 리프노드가 같은 깊이를 가지는 트리일 때 유용합니다.   
+같은 부모노드를 가지는 자식이 많을 경우 공간이 조금 낭비되는 경향이 있습니다.   
+트리의 최대 깊이가 1이더라도 사용할 수 있으므로 필요하다면 가져가서 써보세요.
 
 ### Usage
-먼저 RecyclerView.Adapter를 만듭니다. 나머지는 일반적인 RecyclerView.Adapter의 작성 방식과 동일합니다만, 이 Adapter는 반드시 TreeItemDecoration.Helper 인터페이스를 implement해야 합니다.
+먼저 RecyclerView.Adapter를 만듭니다. 일반적인 RecyclerView.Adapter의 확장 클래스와 비슷하지만, 이 Adapter는 반드시 TreeItemDecoration.Helper 인터페이스를 implement해야 합니다.
 Helper 인터페이스는 다음 세 추상 함수를 가지며 각각 다음과 같습니다:   
 - getInternalNodeName(depth: Int, leafNodePosition: Int): String   
-데이터 리스트의 leafNodePosition 위치의 아이템의 부모 노드 중 depth 깊이에 있는 노드의 이름을 반환해야합니다. 이는 이전 아이템과 다음 아이템이 서로 다른 그룹에 있는지 구별하기 위함입니다.
+데이터 리스트의 leafNodePosition 위치의 아이템과 루트 노드 사이의 내부 노드 중 depth 깊이에 있는 노드의 이름을 반환해야합니다. 이는 이전 아이템과 다음 아이템이 서로 다른 그룹에 있는지 구별하기 위함입니다.
    
 - getDecorationViewWidth(depth: Int, leafNodePosition: Int): Int   
-데이터 리스트의 leafNodePosition 위치의 아이템의 부모 노드 중 depth 깊이에 있는 노드가 가지는 Decoration View의 너비를 반환해야합니다. 같은 깊이라도 leafNodePosition에 따라 다른 너비를 반환하는게 가능합니다.   
+데이터 리스트의 leafNodePosition 위치의 아이템과 루트 노드 사이의 내부 노드 중 depth 깊이에 있는 노드가 가지는 Decoration View의 너비를 반환해야합니다. 같은 깊이라도 leafNodePosition에 따라 다른 너비를 반환하는게 가능합니다.   
 높이를 구하는 함수가 없는 이유는 높이의 경우 해당 Decoration View를 가지는 아이템의 View 높이에 의해 자동으로 결정되기 때문입니다.
    
 - setUpDecoration(depth: Int, leafNodePosition: Int, decoView: TreeItemDecoration.Decoration)   
@@ -266,15 +255,17 @@ class SomeAdapter(private val data: Array<SomeDataClass>): RecyclerView.Adapter<
     // ...
 
     override fun getInternalNodeName(depth: Int, leafNodePosition: Int): String {
-        // TODO("Not yet implemented")
+        // Implement this function
+        return "Some Name"
     }
 
     override fun getDecorationViewWidth(depth: Int, leafNodePosition: Int): Int {
-        // TODO("Not yet implemented")
+        // Implement this function
+        return 100
     }
 
     override fun setupDecoration(depth: Int, leafNodePosition: Int, decoView: TreeItemDecoration.Decoration) {
-        // TODO("Not yet implemented")
+        // Implement this function
     }
 
     class SomeDepth1Decoration(val root: View): Decoration(root){
@@ -364,13 +355,8 @@ TreeItemDecoration의 생성자는 다음과 같습니다.
 - 같은 깊이의 Decoration View는 같은 형태를 가지는 것이 좋습니다. 너비는 깊이가 같더라도 다르게 줄 수 있지만 View 자체는 그렇지 않습니다. 앞에서 언급했듯 View의 visibility를 사용해 
 setupDecoration() 함수에서 스위칭해주는 것도 가능하긴 합니다만, 리소스의 낭비가 발생할 수 있으니까요. 불가능한 건 아니지만 추천하지 않는 방식입니다.
    
-### Plus
-이전에 작업하던 개인용 토이 프젝에서 영감을 받았습니다. 보니까 구글 캘린더의 좌측 헤더와도 비슷하더라고요.   
-코드에 Lint가 하나도 없어서 좋네요. 히히. ~~근데 README에 Lint가 생겼음~~
-   
 ## Manuscript
-원고지 형태의 뷰입니다.   
-다른 건 없고 그리기만 하는 뷰라 말 그대로 그리기만 할 뿐 다른건 안해서... 그냥 특정 텍스트를 강조하고 싶을 때 한 문장 정도 이 뷰를 사용하면 좋을 것 같네요.   
+원고지 형태의, 다른 건 없고 그리기만 하는 뷰입니다.    
 영미권 원고지는 어떻게 생겼는지 모르지만 이 뷰는 일단 한국의 원고지와 동일하게 생겼습니다.   
    
 ### Usage
@@ -416,9 +402,6 @@ Xml파일에 다음을 추가하면 완료입니다.
    
 ### Plus
 디자인 적인 느낌으로 만든 뷰입니다. 실제 원고지나 글자 수를 세려는 목적보다는 강조하고자 하는 문장 혹은 단어를 이 뷰 안에 넣어서 표현하면 좀 괜찮지 않을까 하네요.
-이거 근데 밤 새고 다음날 낮에 만든거라 좀 코드가 지저분할 수 있습니다. 제대로 집중을 못해서...   
-그리고 이거 클래스를 보시는 분이 계실진 모르겠는데 원고지에 그려지는 선도 Line이고 입력받은 텍스트를 최대 칸 수에 맞게 분리해서 한줄한줄 담은 것도 Line이라 변수명을 어찌 구분해야할지 
-꽤 고민했습니다. 영어는 어렵네요...  
 
 ## Conclusion
 패키지에 라이브러리 aar파일이 있을겁니다. 흥미가 가신다면 가져가셔서 써보세요.   
