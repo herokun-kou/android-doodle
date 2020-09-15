@@ -203,8 +203,8 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
 
         if(orientation == ORIENTATION_HORIZONTAL){
             measuredWidth = when(widthMode){
-                MeasureSpec.UNSPECIFIED, MeasureSpec.EXACTLY -> MeasureSpec.getSize(widthMeasureSpec)
-                MeasureSpec.AT_MOST -> sizeOfItself1.coerceAtMost(MeasureSpec.getSize(widthMeasureSpec))
+                MeasureSpec.EXACTLY -> MeasureSpec.getSize(widthMeasureSpec)
+                MeasureSpec.UNSPECIFIED, MeasureSpec.AT_MOST -> sizeOfItself1.coerceAtMost(MeasureSpec.getSize(widthMeasureSpec))
                 else -> sizeOfItself1
             }
 
@@ -214,18 +214,20 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
 
             sizeOfItself2 = linesInParagraph.size * (cellSize + marginBetweenLines) + marginBetweenLines + paddingTop + paddingBottom
 
+            Log.d(TAG, "size2: $sizeOfItself2")
+
             maxMeasuredSize2 = MeasureSpec.getSize(heightMeasureSpec)
             fullSize2 = sizeOfItself2
 
             measuredHeight = when(heightMode){
-                MeasureSpec.UNSPECIFIED, MeasureSpec.EXACTLY -> MeasureSpec.getSize(heightMeasureSpec)
-                MeasureSpec.AT_MOST -> sizeOfItself2
+                MeasureSpec.EXACTLY -> MeasureSpec.getSize(heightMeasureSpec)
+                MeasureSpec.UNSPECIFIED, MeasureSpec.AT_MOST -> sizeOfItself2.coerceAtMost(MeasureSpec.getSize(heightMeasureSpec))
                 else -> sizeOfItself2
             }
         } else {
             measuredHeight = when(heightMode){
-                MeasureSpec.UNSPECIFIED, MeasureSpec.EXACTLY -> MeasureSpec.getSize(heightMeasureSpec)
-                MeasureSpec.AT_MOST -> sizeOfItself1.coerceAtMost(MeasureSpec.getSize(heightMeasureSpec))
+                MeasureSpec.EXACTLY -> MeasureSpec.getSize(heightMeasureSpec)
+                MeasureSpec.UNSPECIFIED, MeasureSpec.AT_MOST -> sizeOfItself1.coerceAtMost(MeasureSpec.getSize(heightMeasureSpec))
                 else -> sizeOfItself1
             }
 
@@ -239,8 +241,8 @@ class Manuscript(context: Context, attrs: AttributeSet?): View(context, attrs) {
             fullSize2 = sizeOfItself2
 
             measuredWidth = when(widthMode){
-                MeasureSpec.UNSPECIFIED, MeasureSpec.EXACTLY -> MeasureSpec.getSize(widthMeasureSpec)
-                MeasureSpec.AT_MOST -> sizeOfItself2
+                MeasureSpec.EXACTLY -> MeasureSpec.getSize(widthMeasureSpec)
+                MeasureSpec.UNSPECIFIED, MeasureSpec.AT_MOST -> sizeOfItself2.coerceAtMost(MeasureSpec.getSize(widthMeasureSpec))
                 else -> sizeOfItself2
             }
         }
